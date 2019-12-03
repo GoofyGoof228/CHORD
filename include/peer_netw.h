@@ -20,9 +20,15 @@ uint32_t get_ipv4_addr(char *name);
  * all inner alloc will be done in func
  * must be freed afterwards
  * */
-external_message* get_ext_msg_response(external_message *in, payload **hash);
+external_message* do_hashtable_action(external_message *in, payload **hash);
 
 int setup_listen_socket(uint16_t port_number, char * ip_str);
+
+int connect_to_peer(uint32_t ip, uint16_t port);
+
+int handle_internal_message(internal_message * m_in, peer_info * self, int socket, fd_set * master);
+
+int handle_external_message(external_message * m_ex, peer_info * self, int socket, fd_set * master);
 
 /**
  * in - message that came
@@ -31,7 +37,7 @@ int setup_listen_socket(uint16_t port_number, char * ip_str);
  * */
 int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* master);
 
-int connect_to_peer(uint32_t ip, uint16_t port);
+
 
 
 #endif //BLOCK4_PEER_FUNC_H
