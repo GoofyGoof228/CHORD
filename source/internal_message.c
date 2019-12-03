@@ -172,6 +172,19 @@ int send_internal_message(internal_message *m, int sock){
     return 0;
 }
 
+internal_message * new_internal_message (internal_action type, uint16_t hash_id, uint16_t id, uint32_t ip, uint32_t port) {
+    internal_message* m = calloc(1, sizeof(internal_message));
+    if(m == NULL) {
+        return NULL;
+    }
+    m->type = type;
+    m->hash_id = hash_id;
+    m->node_id = id;
+    m->node_ip = ip;
+    m->node_port = port;
+    return m;
+}
+
 void print_internal_message(internal_message* m){
     if(m == NULL){
         fprintf(stderr, "void print_internal_message : m == NULL");

@@ -48,7 +48,8 @@ int main(int argc, char* argv[]){
 
     // setup connection
     char port[12];
-    int_to_str(self_info.self_port, port);
+
+    sprintf(port, "%d", self_info.self_port);
     struct addrinfo hints, *result, *p;
     SOCKET listen_sock = 0;
     int yes = 1;
@@ -122,24 +123,24 @@ int main(int argc, char* argv[]){
                     }
 
                     FD_SET(client_sock, &connections_storage);
-                    if (client_sock > max_socket)
+
+                    if (client_sock > max_socket) {
                         max_socket = client_sock;
-
+                    }
                     #ifdef TEST
-                    socklen_t len;
-                    struct sockaddr_storage addr;
-                    char ipstr[INET_ADDRSTRLEN];
-                    int client_port;
+                        socklen_t len;
+                        struct sockaddr_storage addr;
+                        char ipstr[INET_ADDRSTRLEN];
+                        int client_port;
 
-                    len = sizeof addr;
-                    getpeername(client_sock, (struct sockaddr*)&addr, &len);
+                        len = sizeof addr;
+                        getpeername(client_sock, (struct sockaddr*)&addr, &len);
 
-                    struct sockaddr_in *s = (struct sockaddr_in *)&addr;
-                    client_port = ntohs(s->sin_port);
-                    inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
+                        struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+                        client_port = ntohs(s->sin_port);
+                        inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
 
-                    #ifdef TEST
-                    printf("\nNew connection from %d:%s at socket: %d\n", client_port, ipstr, client_sock);
+                        printf("\nNew connection from %d:%s at socket: %d\n", client_port, ipstr, client_sock);
                     #endif
                 }
                 else {

@@ -78,7 +78,7 @@ int connect_to_peer(uint32_t ip, uint16_t port){
     client_addr.ai_flags = AI_PASSIVE; // ToDO Do we need ai_flags?
     struct addrinfo *server_adrr;
     char str_port[12];
-    int_to_str(port, str_port);
+    sprintf(str_port, "%d", port);
     char *str_ip4;
     struct in_addr ip_addr;
     ip_addr.s_addr = ip;
@@ -132,7 +132,7 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
             // check if next one is resp peer
             if(is_between(m_in->hash_id, self->self_id, self->next_id)){
                 // send repl with info of next node
-                internal_message* reply = create_reply(self, m_in->hash_id);
+                internal_message* reply = new_internal_message(REPLY, m_in->hash_id, self->next_id, self->next_ip, self->next_port); //create_reply(self, m_in->hash_id);
                 int peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
                 send_internal_message(reply, peer_socket);
                 close(peer_socket);
@@ -143,7 +143,6 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
                 return 0;
             }else{
                 // send to next peer
-                //sleep(5);
                 int next_peer_socket = connect_to_peer(self->next_ip, self->next_port);
                 send_internal_message(m_in, next_peer_socket);
                 close(next_peer_socket);
@@ -184,13 +183,13 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
         // Ack from Peer
         if(m_ex->ack == true){
             // TODO Clean up this ugly mess
-
             payload *p1 = ints_to_payload(socket, 0);
             payload *p2 = h_get(self->response_sockets_head, p1->key, p1->key_len);
             free_payload(p1);
             int client_sock = buf_to_int(p2->value, p2->val_len);
             h_del(self->response_sockets_head, p2->key, p2->key_len);
             free_payload(p2);
+
             // send answer back
             int res = send_external_message(m_ex, client_sock);
 
@@ -222,19 +221,19 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
             else{
                 // save the state
                 listPushFront(self->states, m_ex);
+                // create Lookup message
+                int hash_value = get_hash_id(m_ex->data->key, m_ex->data->key_len);
+                internal_message * out = new_internal_message(LOOKUP, hash_value, self->self_id, self->self_ip, self->self_port); //create_look_up(m_ex, self);
                 // send look up
-                internal_message *out;
-                out = create_look_up(m_ex, self);
-
                 int next_peer_socket = connect_to_peer(self->next_ip, self->next_port);
                 send_internal_message(out, next_peer_socket);
                 close(next_peer_socket);
-                //free_message(in);
                 free(out);
                 return 0;
             }
         }
-    }else{
+    }
+    else {
         fprintf(stderr, "react_on_incoming_message : both types are NULL\n");
         return -1;
     }

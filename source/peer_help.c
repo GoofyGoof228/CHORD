@@ -75,41 +75,6 @@ void print_peer_info_long(peer_info* self){
 
 }
 
-void int_to_str(int n, char* str){
-    sprintf(str, "%d", n);
-}
-internal_message* look_up_to_reply(internal_message* m_in, peer_info* self){
-    internal_message* out = (internal_message*) malloc(sizeof(internal_message));
-    out->type = REPLY;
-    out->node_id = self->next_id;
-    out->node_ip = self->next_ip;
-    out->node_port = self->next_port;
-    //out->control = false;
-    return out;
-}
-
-internal_message* create_look_up(external_message* m_ex, peer_info* self){
-    internal_message * m_in = (internal_message*) malloc(sizeof(internal_message));
-    m_in->type = LOOKUP;
-    m_in->hash_id = get_hash_id(m_ex->data->key, m_ex->data->key_len);
-    m_in->node_id = self->self_id;
-    m_in->node_ip = self->self_ip;
-    m_in->node_port = self->self_port;
-    //m_in->control = false;
-    return m_in;
-}
-
-internal_message* create_reply(peer_info* self, uint16_t hash_id){
-    internal_message* reply = malloc(sizeof(internal_message));
-    //reply->control = 0;
-    reply->hash_id = hash_id;
-    reply->node_id = self->next_id;
-    reply->node_ip = self->next_ip;
-    reply->node_port = self->next_port;
-    reply->type = REPLY;
-    return reply;
-}
-
 external_message* get_saved_state(list* states, uint16_t hash_id){
     //iterate over list and find right saved message
     listIterator* it = listIteratorCreate(states);
