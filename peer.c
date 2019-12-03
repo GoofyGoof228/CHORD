@@ -1,15 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <netdb.h>
 #include <sys/time.h>
-#include <sys/types.h>
 #include <unistd.h>
 #include "hash_table.h"
 #include "peer_netw.h"
 #include "peer_help.h"
 #include <arpa/inet.h>
 #include <errno.h>
-//#define TEST
+
+#define TEST
 #define GETSOCKETERRNO() (errno)
 #define SOCKET int
 
@@ -20,6 +19,8 @@ int main(int argc, char* argv[]){
         fprintf(stderr,"Usage: ./peer (self) id ip port (previous) id ip port (next) id ip port\n");
         exit(EXIT_FAILURE);
     }
+    char * ip_string = argv[2];
+
     // TO DO setup
     peer_info self_info;
 
@@ -49,7 +50,7 @@ int main(int argc, char* argv[]){
     #endif
 
     // setup connection
-    SOCKET listen_sock = setup_listen_socket(self_info.self_port, self_info.self_ip);
+    SOCKET listen_sock = setup_listen_socket(self_info.self_port, ip_string);
     if(listen_sock == -1) {
         fprintf(stderr, " - setup_listen_socket\n");
         exit(EXIT_FAILURE);
@@ -72,7 +73,7 @@ int main(int argc, char* argv[]){
         max_socket = STDIN_FILENO;
     }
     #ifdef TEST
-        printf("Press any key to quit \n");
+        printf("\nPress any key to quit \n");
     #endif
     while(running) {
         // copy FD set

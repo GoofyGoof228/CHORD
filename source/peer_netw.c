@@ -32,7 +32,7 @@ uint32_t get_ipv4_addr(char *name){
     return result;
 }
 
-int setup_listen_socket(uint16_t port_number, uint32_t ip_number){
+int setup_listen_socket(uint16_t port_number, char * ip_str){
     char port[12];
     sprintf(port, "%d", port_number);
     struct addrinfo hints, *result, *p;
@@ -45,9 +45,9 @@ int setup_listen_socket(uint16_t port_number, uint32_t ip_number){
      * */
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
+    //hints.ai_flags = AI_PASSIVE;
 
-    if (getaddrinfo(NULL, port, &hints, &result) != 0) {
+    if (getaddrinfo(ip_str, port, &hints, &result) != 0) {
         fprintf(stderr, "Server: getaddrinfo error : \n");
     }
     // Loop through results
