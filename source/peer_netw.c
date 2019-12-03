@@ -32,6 +32,56 @@ uint32_t get_ipv4_addr(char *name){
     return result;
 }
 
+int setup_listen_socket(uint16_t port_number, uint32_t ip_number){
+    char port[12];
+    sprintf(port, "%d", port_number);
+    struct addrinfo hints, *result, *p;
+    int listen_sock = 0;
+    int yes = 1;
+    memset(&hints, 0, sizeof(hints));
+    /**
+     * when set to AF_INET doest recieve connections from localhost
+     * but ew why ????
+     * */
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
+
+    if (getaddrinfo(NULL, port, &hints, &result) != 0) {
+        fprintf(stderr, "Server: getaddrinfo error : \n");
+    }
+    // Loop through results
+    for (p = result; p != NULL; p = p->ai_next) {
+        if ((listen_sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+            perror("Server: at socket");
+            continue;
+        }
+
+        if (setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+            perror("Server: at setsockopt");
+            return -1;
+        }
+
+        if (bind(listen_sock, p->ai_addr, p->ai_addrlen) == -1) {
+            close(listen_sock);
+            perror("Server: at bind");
+            continue;
+        }
+        break;
+    }
+    freeaddrinfo(result);
+    if (p == NULL) {
+        fprintf(stderr, "Server: Bind failed");
+        return -1;
+    }
+    if (listen(listen_sock, 10) == -1) {
+        perror("Server: at listen");
+        return -1;
+    }
+
+    return listen_sock;
+}
+
 external_message* get_ext_msg_response(external_message *in, payload **hash){
 
     if(in->ack) {

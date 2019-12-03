@@ -22,6 +22,8 @@ uint32_t get_ipv4_addr(char *name);
  * */
 external_message* get_ext_msg_response(external_message *in, payload **hash);
 
+int setup_listen_socket(uint16_t port_number, uint32_t ip_number);
+
 /**
  * in - message that came
  *  self - peer info struct fron reciever

@@ -13,7 +13,6 @@
 
 #define DG
 
-
 int main(int argc, char* argv[]){
     if(argc != 10){
         fprintf(stderr,"Usage: ./peer (self) id ip port (previous) id ip port (next) id ip port\n");
@@ -21,8 +20,10 @@ int main(int argc, char* argv[]){
     }
     // TO DO setup
     peer_info self_info;
+
     payload * hash = NULL;
     payload * response_socket_head = NULL;
+
     self_info.hash_head = &hash;
     self_info.response_sockets_head = &response_socket_head;
     self_info.states = listCreate();
@@ -39,66 +40,27 @@ int main(int argc, char* argv[]){
     self_info.next_id = atoi(argv[7]);
     self_info.next_ip = get_ipv4_addr(argv[5]);
     self_info.next_port = atoi(argv[9]);
-#ifdef TEST
-    printf("started peer :\n");
-    print_peer_info_long(&self_info);
-#endif
 
-
+    #ifdef TEST
+        printf("started peer :\n");
+        print_peer_info_long(&self_info);
+    #endif
 
     // setup connection
-    char port[12];
-
-    sprintf(port, "%d", self_info.self_port);
-    struct addrinfo hints, *result, *p;
-    SOCKET listen_sock = 0;
-    int yes = 1;
-    memset(&hints, 0, sizeof(hints));
-    /**
-     * when set to AF_INET doest recieve connections from localhost
-     * but ew why ????
-     * */
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
-
-    if (getaddrinfo(NULL, port, &hints, &result) != 0) {
-        fprintf(stderr, "Server: getaddrinfo error : \n");
-    }
-    // Loop through results
-    for (p = result; p != NULL; p = p->ai_next) {
-        if ((listen_sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-            perror("Server: at socket");
-            continue;
-        }
-
-        if (setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-            perror("Server: at setsockopt");
-            exit(EXIT_FAILURE);
-        }
-
-        if (bind(listen_sock, p->ai_addr, p->ai_addrlen) == -1) {
-            close(listen_sock);
-            perror("Server: at bind");
-            continue;
-        }
-        break;
-    }
-    freeaddrinfo(result);
-    if (p == NULL) {
-        fprintf(stderr, "Server: Bind failed");
+    SOCKET listen_sock = setup_listen_socket(self_info.self_port, self_info.self_ip);
+    if(listen_sock == -1) {
+        fprintf(stderr, " - setup_listen_socket\n");
         exit(EXIT_FAILURE);
     }
-    if (listen(listen_sock, 10) == -1) {
-        perror("Server: at listen");
-        exit(EXIT_FAILURE);
-    }
+
     fd_set connections_storage;
     FD_ZERO(&connections_storage);
     FD_SET(listen_sock, &connections_storage);
+
     SOCKET max_socket = listen_sock;
+
     while(1) {
-        // copy filediscriptor set
+        // copy FD set
         fd_set in_fd = connections_storage;
         // value 0 = wait until a socket is ready to get read from
         if (select(max_socket+1, &in_fd, NULL, NULL, NULL) < 0) {
