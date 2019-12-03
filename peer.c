@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <netdb.h>
+#include <sys/time.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include "hash_table.h"
 #include "peer_netw.h"
@@ -53,17 +55,30 @@ int main(int argc, char* argv[]){
         exit(EXIT_FAILURE);
     }
 
+    struct timeval tv;
+    tv.tv_sec = 2;
+    tv.tv_usec = 0;
+
+    bool running = true;
+
     fd_set connections_storage;
     FD_ZERO(&connections_storage);
-    FD_SET(listen_sock, &connections_storage);
 
+    FD_SET(listen_sock, &connections_storage);
     SOCKET max_socket = listen_sock;
 
-    while(1) {
+    FD_SET(STDIN_FILENO, &connections_storage);
+    if(STDIN_FILENO > max_socket){
+        max_socket = STDIN_FILENO;
+    }
+    #ifdef TEST
+        printf("Press any key to quit \n");
+    #endif
+    while(running) {
         // copy FD set
         fd_set in_fd = connections_storage;
         // value 0 = wait until a socket is ready to get read from
-        if (select(max_socket+1, &in_fd, NULL, NULL, NULL) < 0) {
+        if (select(max_socket+1, &in_fd, NULL, NULL, &tv) < 0) {
             // select modifies the input set
             fprintf(stderr, "Peer: select() failed. (%d)\n", GETSOCKETERRNO());
             perror("\n");
@@ -104,6 +119,12 @@ int main(int argc, char* argv[]){
 
                         printf("\nNew connection from %d:%s at socket: %d\n", client_port, ipstr, client_sock);
                     #endif
+                }
+                else if(i == STDIN_FILENO){
+                    // Shutdown
+                    running = false;
+                    i = max_socket + 1;
+                    continue;
                 }
                 else {
                     message* m_in = malloc(sizeof(message));
