@@ -16,23 +16,32 @@
  * */
 struct _peer_info{
 
+    bool first_peer;
     uint16_t self_id;
     uint32_t self_ip;
     uint16_t self_port;
 
+
+    bool initialised_previous;
     uint16_t previous_id;
     uint32_t previous_ip;
     uint16_t previous_port;
 
+    bool initialised_next;
     uint16_t next_id;
     uint32_t next_ip;
     uint16_t next_port;
+
+    uint32_t join_ip;
+    uint16_t join_port;
 
     payload** hash_head;
     payload** response_sockets_head;
     list* states;
 };
 typedef struct _peer_info peer_info;
+
+int setup_peer_info(peer_info * self, char *argv[], int argc);
 
 void print_addr_info(uint16_t id, uint32_t ip, uint32_t port);
 

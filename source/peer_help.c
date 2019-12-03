@@ -3,8 +3,53 @@
 //
 
 #include "peer_help.h"
+#include "peer_netw.h"
 #include <stdio.h>
 #include <arpa/inet.h>
+
+int setup_peer_info(peer_info * self, char *argv[], int argc){
+
+    self->first_peer = false;
+    self->initialised_previous = false;
+    self->initialised_next = false;
+
+    self->self_id = 0;
+
+    self->previous_id = 0;
+    self->previous_ip = 0;
+    self->previous_port = 0;
+
+    self->next_id = 0;
+    self->next_ip = 0;
+    self->next_port = 0;
+
+    switch (argc) {
+        case 5: {
+            self->self_ip = get_ipv4_addr(argv[1]);
+            self->self_port = atoi(argv[2]);
+            self->self_id = atoi(argv[3]);
+            // Set Join Node to Next
+            self->join_ip = get_ipv4_addr(argv[4]);
+            self->join_port = atoi(argv[5]);
+            break;
+        }
+        case 4: {
+            self->self_id = atoi(argv[3]);
+        }
+        case 3: {
+            self->first_peer = true;
+            self->self_ip = get_ipv4_addr(argv[1]);
+            self->self_port = atoi(argv[2]);
+            self->self_id = 0;
+            break;
+        }
+        default: {
+            fprintf(stderr,"Usage: ./peer IP Port [ID] [Peer-IP Peer-Port]\n");
+            return -1;
+        }
+    }
+    return 0;
+}
 
 external_message* get_saved_state(list* states, uint16_t hash_id){
     //iterate over list and find right saved message
