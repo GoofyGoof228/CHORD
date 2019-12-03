@@ -11,6 +11,7 @@
 #define GETSOCKETERRNO() (errno)
 #define SOCKET int
 
+#define DG
 
 
 int main(int argc, char* argv[]){
@@ -120,12 +121,11 @@ int main(int argc, char* argv[]){
                         continue;
                     }
 
-
                     FD_SET(client_sock, &connections_storage);
                     if (client_sock > max_socket)
                         max_socket = client_sock;
 
-#ifdef TEST
+                    #ifdef TEST
                     socklen_t len;
                     struct sockaddr_storage addr;
                     char ipstr[INET_ADDRSTRLEN];
@@ -138,15 +138,11 @@ int main(int argc, char* argv[]){
                     client_port = ntohs(s->sin_port);
                     inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
 
-
-
-                    //printf("Peer IP address: %s\n", ipstr);
-                    //printf("Peer port      : %d\n", client_port);
-
-
+                    #ifdef TEST
                     printf("\nNew connection from %d:%s at socket: %d\n", client_port, ipstr, client_sock);
-#endif
-                } else {
+                    #endif
+                }
+                else {
                     message* m_in = malloc(sizeof(message));
                     // Receive and Decode Message
                     if(recv_message(m_in, i) == -1){
@@ -154,18 +150,14 @@ int main(int argc, char* argv[]){
                         close(i);
                         continue;
                     }
-#ifdef DG
-                    printf("\nRecieved :\n");
-                    (m_in.int_msg != NULL) ? print_internal_message(m_in.int_msg) : print_external_message(m_in.ext_msg);
-#endif
                     react_on_incoming_message(m_in, &self_info, i, &connections_storage);
                     free(m_in);
                 }
             }
         }
     }
-    h_free(&hash);
-    close(listen_sock);
+    h_free(self_info.hash_head);
+    h_free(self_info.response_sockets_head);
     exit(EXIT_SUCCESS);
 }
 

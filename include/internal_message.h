@@ -20,13 +20,12 @@ struct _internal_message{
 };
 typedef struct _internal_message internal_message;
 
-void print_internal_message(internal_message* m);
-
 int encode_internal_message(uint8_t *buf, internal_message *m);
 
 int decode_internal_header(uint8_t *buf, internal_message *m);
 
 int send_internal_message(internal_message *m, int sock);
 
-internal_message* copy_int_message(internal_message* old);
+void print_internal_message(internal_message* m);
+
 #endif //BLOCK4_INTERNAL_MESSAGE_H

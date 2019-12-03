@@ -17,22 +17,7 @@ bool is_internal(uint8_t byte){
     }
     return false;
 }
-int check_socket(int socket){
-    int error = 0;
-    socklen_t len = sizeof (error);
-    int retval = getsockopt (socket, SOL_SOCKET, SO_ERROR, &error, &len);
-    if (retval != 0) {
-        /* there was a problem getting the error code */
-        fprintf(stderr, "error getting socket error code: %s\n", strerror(retval));
-        return -1;
-    }
-    if (error != 0) {
-        /* socket has a non zero error status */
-        fprintf(stderr, "socket error: %s\n", strerror(error));
-        return -1;
-    }
-    return 0;
-}
+
 int recv_message(message *m, int sock){
 
     int bytes_recieved = 0;
@@ -132,6 +117,7 @@ int recv_message(message *m, int sock){
     free(buf);
     return 0;
 }
+
 void free_message(message* old){
     if(old->ext_msg != NULL)free_external_message(old->ext_msg);
     else if (old->int_msg != NULL)free(old->int_msg);

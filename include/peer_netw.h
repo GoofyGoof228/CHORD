@@ -10,20 +10,18 @@
 #include "message.h"
 #include "list.h"
 #include "peer_help.h"
-
-
+#define TEST
 
 uint32_t get_ipv4_addr(char *name);
 
-uint32_t ip_to_int(char* name);
-int setup_connection(char *port);
 /**
  * in - filled struct
  * out - staticly declared pointer
  * all inner alloc will be done in func
  * must be freed afterwards
  * */
-external_message* get_protocol_1_response(external_message *in, payload **hash);
+external_message* get_ext_msg_response(external_message *in, payload **hash);
+
 /**
  * in - message that came
  *  self - peer info struct fron reciever

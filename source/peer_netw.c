@@ -9,8 +9,6 @@
 #include "peer_netw.h"
 #include "hash_table.h"
 
-
-
 uint32_t get_ipv4_addr(char *name){
     int status;
     struct addrinfo hints;
@@ -33,97 +31,41 @@ uint32_t get_ipv4_addr(char *name){
     freeaddrinfo(res);
     return result;
 }
-uint32_t ip_to_int(char* name){
-    struct sockaddr_in ip;
-    inet_aton(name, &ip.sin_addr);
-    return ip.sin_addr.s_addr;
-}
-int setup_connection(char *port) {
-    struct addrinfo hints, *result, *p;
-    int listen_sock = 0;
-    int yes = 1;
 
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE;
-
-    if (getaddrinfo(NULL, port, &hints, &result) != 0) {
-        fprintf(stderr, "Server: getaddrinfo error : \n");
-    }
-    // Loop through results
-    for (p = result; p != NULL; p = p->ai_next) {
-        if ((listen_sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-            perror("Server: at socket");
-            continue;
-        }
-
-        if (setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-            perror("Server: at setsockopt");
-            exit(EXIT_FAILURE);
-        }
-
-        if (bind(listen_sock, p->ai_addr, p->ai_addrlen) == -1) {
-            close(listen_sock);
-            perror("Server: at bind");
-            continue;
-        }
-        break;
-    }
-
-    freeaddrinfo(result);
-
-    if (p == NULL) {
-        fprintf(stderr, "Server: Bind failed");
-        exit(EXIT_FAILURE);
-    }
-
-    if (listen(listen_sock, 10) == -1) {
-        perror("Server: at listen");
-        exit(EXIT_FAILURE);
-    }
-
-    return listen_sock;
-}
-
-external_message* get_protocol_1_response(external_message *in, payload **hash){
+external_message* get_ext_msg_response(external_message *in, payload **hash){
 
     if(in->ack) {
         fprintf(stderr, "Error while Handeling Message: Message is Ack\n");
         return NULL;
     }
+
     external_message* out = malloc(sizeof(external_message));
     out->ack = true;
     out->type = in->type;
+
     switch (in->type) {
         case GET: {
             out->data = h_get(hash, in->data->key, in->data->key_len);
             if(out->data == NULL){
                 out->data = payload_deepcopy(in->data);
-                //fprintf(stderr, "key not found ");
             }
             break;
         }
-
         case SET: {
             h_set_p(hash, in->data);
             out->data = create_empty_payload();
 
             break;
         }
-
         case DELETE: {
             h_del(hash, in->data->key, in->data->key_len);
             out->data = create_empty_payload();
             break;
         }
-
         default: {
             fprintf(stderr, "Error while Handeling Message: Message formated incorrectly\n");
             return NULL;
         }
-
-
     }
     return out;
 }
@@ -169,9 +111,6 @@ int connect_to_peer(uint32_t ip, uint16_t port){
     return sock;
 }
 
-
-
-
 int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* master){
     if(in == NULL){
         fprintf(stderr, "react_on_incoming_message: in == NULL\n");
@@ -184,7 +123,11 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
 
     if(in->int_msg != NULL){
         internal_message* m_in = in->int_msg;
-
+        #ifdef TEST
+            printf("\nRecived:\n");
+            print_internal_message(m_in);
+        #endif
+        print_internal_message(m_in);
         if(m_in->type == LOOKUP){
             // check if next one is resp peer
             if(is_between(m_in->hash_id, self->self_id, self->next_id)){
@@ -200,6 +143,7 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
                 return 0;
             }else{
                 // send to next peer
+                //sleep(5);
                 int next_peer_socket = connect_to_peer(self->next_ip, self->next_port);
                 send_internal_message(m_in, next_peer_socket);
                 close(next_peer_socket);
@@ -218,7 +162,6 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
             close(socket);
             FD_CLR(socket, master);
 
-
             int peer_sock = connect_to_peer(m_in->node_ip, m_in->node_port);
             send_external_message(to_send, peer_sock);
             FD_SET(peer_sock, master);
@@ -231,11 +174,13 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
             free_message(in);
             return 0;
         }
-
-
-    }else if(in->ext_msg != NULL){
+    }
+    else if(in->ext_msg != NULL){
         external_message* m_ex = in->ext_msg;
-
+        #ifdef TEST
+            printf("\nRecived:\n");
+            print_external_message(m_ex);
+        #endif
         // Ack from Peer
         if(m_ex->ack == true){
             // TODO Clean up this ugly mess
@@ -246,12 +191,6 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
             int client_sock = buf_to_int(p2->value, p2->val_len);
             h_del(self->response_sockets_head, p2->key, p2->key_len);
             free_payload(p2);
-            /*payload *p = ints_to_payload(socket, 0);
-            p = h_get(self->response_sockets_head, p->key, p->key_len);
-            int client_sock = buf_to_int(p->value, p->val_len);
-            h_del(self->response_sockets_head, p->key, p->key_len);*/
-            //also free the hash table
-            h_free(self->response_sockets_head);
             // send answer back
             int res = send_external_message(m_ex, client_sock);
 
@@ -270,7 +209,7 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
             if(is_between(hash_id, self->previous_id, self->self_id)){
 
                 // do action on HT, send reply(external, with ack)
-                external_message* out = get_protocol_1_response(m_ex ,self->hash_head);
+                external_message* out = get_ext_msg_response(m_ex, self->hash_head);
 
                 send_external_message(out, socket);
                 free_external_message(out);
