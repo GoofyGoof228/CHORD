@@ -84,7 +84,7 @@ internal_message* look_up_to_reply(internal_message* m_in, peer_info* self){
     out->node_id = self->next_id;
     out->node_ip = self->next_ip;
     out->node_port = self->next_port;
-    out->control = false;
+    //out->control = false;
     return out;
 }
 
@@ -95,13 +95,13 @@ internal_message* create_look_up(external_message* m_ex, peer_info* self){
     m_in->node_id = self->self_id;
     m_in->node_ip = self->self_ip;
     m_in->node_port = self->self_port;
-    m_in->control = false;
+    //m_in->control = false;
     return m_in;
 }
 
 internal_message* create_reply(peer_info* self, uint16_t hash_id){
     internal_message* reply = malloc(sizeof(internal_message));
-    reply->control = 0;
+    //reply->control = 0;
     reply->hash_id = hash_id;
     reply->node_id = self->next_id;
     reply->node_ip = self->next_ip;

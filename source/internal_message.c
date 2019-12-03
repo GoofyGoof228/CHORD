@@ -16,7 +16,7 @@ void print_internal_message(internal_message* m){
     }
     printf("internal message\n");
     printf("----------------\n");
-    printf("control : %s\n", (m->control == true) ? "true" : " false");
+    //printf("control : %s\n", (m->control == true) ? "true" : " false");
     printf("type : %s\n", (m->type == LOOKUP)? "LOOKUP" : "REPLY");
     printf("hash id : %d\n", m->hash_id);
     printf("node id : %d\n", m->node_id);
@@ -33,6 +33,26 @@ int encode_internal_message (uint8_t *buf, internal_message *m) {
 
     // encode action
     switch (m->type) {
+        case FINGER : {
+            buf[0] = buf[0] | (uint8_t) 0xc0;
+            break;
+        }
+        case F_ACK : {
+            buf[0] = buf[0] | (uint8_t) 0xa0;
+            break;
+        }
+        case JOIN : {
+            buf[0] = buf[0] | (uint8_t) 0x90;
+            break;
+        }
+        case NOTIFY : {
+            buf[0] = buf[0] | (uint8_t) 0x88;
+            break;
+        }
+        case STABILIZE : {
+            buf[0] = buf[0] | (uint8_t) 0x84;
+            break;
+        }
         case REPLY : {
             buf[0] = buf[0] | (uint8_t) 0x82;
             break;
@@ -79,7 +99,7 @@ int encode_internal_message (uint8_t *buf, internal_message *m) {
 
 int decode_internal_header (uint8_t *buf, internal_message *m) {
     // Type
-    int8_t action = buf[0] & (uint8_t) 0x03; // 0x03 = 0000 0011
+    int8_t action = buf[0] & (uint8_t) 0x7f; // 0x/f = 0111 1111
     switch (action){
         case 1: {
             m->type = LOOKUP;
@@ -89,8 +109,27 @@ int decode_internal_header (uint8_t *buf, internal_message *m) {
             m->type = REPLY;
             break;
         }
+        case 4: {
+            m->type = STABILIZE;
+            break;
+        }
+        case 8: {
+            m->type = NOTIFY;
+            break;
+        }
+        case 16: {
+            m->type = JOIN;
+            break;
+        }
+        case 32: {
+            m->type = F_ACK;
+            break;
+        }
+        case 64: {
+            m->type = FINGER;
+            break;
+        }
         default: {
-            //m->tyEDpe = NOT_DEFIN;
             return -1;
         }
     }
