@@ -9,30 +9,30 @@
 #include <arpa/inet.h>
 #include "internal_message.h"
 
-void print_internal_message(internal_message* m){
-    if(m == NULL){
-        fprintf(stderr, "void print_internal_message : m == NULL");
-        return;
-    }
-    printf("internal message\n");
-    printf("----------------\n");
-    printf("control : %s\n", (m->control == true) ? "true" : " false");
-    printf("type : %s\n", (m->type == LOOKUP)? "LOOKUP" : "REPLY");
-    printf("hash id : %d\n", m->hash_id);
-    printf("node id : %d\n", m->node_id);
-    char buf[INET_ADDRSTRLEN];
-    struct in_addr ip;
-    ip.s_addr = m->node_ip;
-    inet_ntop(AF_INET, &ip, buf, INET_ADDRSTRLEN);
-    printf("node ip : %s\n", buf);
-    printf("node port : %d\n", m->node_port);
-    fflush(stdout);
-}
-
 int encode_internal_message (uint8_t *buf, internal_message *m) {
 
     // encode action
     switch (m->type) {
+        case FINGER : {
+            buf[0] = buf[0] | (uint8_t) 0xc0;
+            break;
+        }
+        case F_ACK : {
+            buf[0] = buf[0] | (uint8_t) 0xa0;
+            break;
+        }
+        case JOIN : {
+            buf[0] = buf[0] | (uint8_t) 0x90;
+            break;
+        }
+        case NOTIFY : {
+            buf[0] = buf[0] | (uint8_t) 0x88;
+            break;
+        }
+        case STABILIZE : {
+            buf[0] = buf[0] | (uint8_t) 0x84;
+            break;
+        }
         case REPLY : {
             buf[0] = buf[0] | (uint8_t) 0x82;
             break;
@@ -79,7 +79,7 @@ int encode_internal_message (uint8_t *buf, internal_message *m) {
 
 int decode_internal_header (uint8_t *buf, internal_message *m) {
     // Type
-    int8_t action = buf[0] & (uint8_t) 0x03; // 0x03 = 0000 0011
+    int8_t action = buf[0] & (uint8_t) 0x7f; // 0x/f = 0111 1111
     switch (action){
         case 1: {
             m->type = LOOKUP;
@@ -89,8 +89,27 @@ int decode_internal_header (uint8_t *buf, internal_message *m) {
             m->type = REPLY;
             break;
         }
+        case 4: {
+            m->type = STABILIZE;
+            break;
+        }
+        case 8: {
+            m->type = NOTIFY;
+            break;
+        }
+        case 16: {
+            m->type = JOIN;
+            break;
+        }
+        case 32: {
+            m->type = F_ACK;
+            break;
+        }
+        case 64: {
+            m->type = FINGER;
+            break;
+        }
         default: {
-            //m->tyEDpe = NOT_DEFIN;
             return -1;
         }
     }
@@ -124,9 +143,7 @@ int decode_internal_header (uint8_t *buf, internal_message *m) {
 }
 
 int send_internal_message(internal_message *m, int sock){
-#ifdef TEST
-    printf("\nSending");
-#endif
+
     uint8_t *buf = calloc(INTERNAL_HEADER_LEN, sizeof(uint8_t));
 
     int bytes_sent = 0;
@@ -137,9 +154,6 @@ int send_internal_message(internal_message *m, int sock){
         fprintf(stderr, "Error while Encodeing Internal Message\n");
         return -1;
     }
-#ifdef TEST
-    printf(" . ");
-#endif
     do {
         bytes_sent += send(sock, buf + bytes_sent, buf_len, 0);
 
@@ -148,19 +162,44 @@ int send_internal_message(internal_message *m, int sock){
             perror("Error while Sending Internal Message: send() error");
             return -1;
         }
-#ifdef TEST
-        printf(" . ");
-#endif
-
     } while (bytes_sent < buf_len);
-#ifdef TEST
-    printf(" . ");
-    printf("Sent:\n");
+    #ifdef TEST
+    printf("\nSent:\n");
     print_internal_message(m);
-#endif
+    #endif
     free(buf);
-
 
     return 0;
 }
 
+internal_message * new_internal_message (internal_action type, uint16_t hash_id, uint16_t id, uint32_t ip, uint32_t port) {
+    internal_message* m = calloc(1, sizeof(internal_message));
+    if(m == NULL) {
+        return NULL;
+    }
+    m->type = type;
+    m->hash_id = hash_id;
+    m->node_id = id;
+    m->node_ip = ip;
+    m->node_port = port;
+    return m;
+}
+
+void print_internal_message(internal_message* m){
+    if(m == NULL){
+        fprintf(stderr, "void print_internal_message : m == NULL");
+        return;
+    }
+    printf("internal message\n");
+    printf("----------------\n");
+    printf("type : %s\n", (m->type == LOOKUP)? "LOOKUP" : "REPLY");
+    printf("hash id : %d\n", m->hash_id);
+    printf("node id : %d\n", m->node_id);
+    char buf[INET_ADDRSTRLEN];
+    struct in_addr ip;
+    ip.s_addr = m->node_ip;
+    inet_ntop(AF_INET, &ip, buf, INET_ADDRSTRLEN);
+    printf("node ip : %s\n", buf);
+    printf("node port : %d\n", m->node_port);
+    fflush(stdout);
+}

@@ -14,7 +14,6 @@ payload* create_empty_payload(){
 
 uint8_t* array_deepcopy(uint8_t* old, uint32_t size){
     if(old == NULL){
-        //fprintf(stderr, "NUll pointer exception at array_deepcopy() : old");
         return NULL;
     }
     uint8_t* new_arr = calloc(size, sizeof(uint8_t));
@@ -90,26 +89,17 @@ int buf_to_int(uint8_t *buf, uint16_t buf_len){
 }
 
 void free_payload(payload* old){
-    //printf("1\n");
     if(old == NULL){
         fprintf(stderr, "NUll pointer exception at free_payload() : old");
         return;
     }
-    //printf("2\n");
     if(old->key != NULL){
-        //printf("3\n");
         free(old->key);
-        //printf("4\n");
     }
-    //printf("5\n");
     if(old->value != NULL){
-        //printf("6\n");
         free(old->value);
-        //printf("7\n");
     }
-    //printf("8\n");
     free(old);
-    //printf("9\n");
 }
 
 

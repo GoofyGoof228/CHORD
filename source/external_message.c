@@ -6,102 +6,7 @@
 
 #include <stdio.h>
 #include <sys/socket.h>
-#define MAX_ID 399
 
-
-void print_external_message(external_message *m) {
-    if (m == NULL) {
-        printf("( Empty Message )");
-        return;
-    }
-    switch (m->type) {
-        case GET: {
-            printf("| Type: GET ");
-            break;
-        }
-        case SET: {
-            printf("| Type: SET ");
-            break;
-        }
-        case DELETE: {
-            printf("| Type: DELETE ");
-            break;
-        }
-        default: {
-            printf("| Type: NOT_DEFINED ");
-            break;
-        }
-    }
-    printf("| Ack: %d\n ", m->ack);
-    if (m->data == NULL)return;
-    printf("| Key Length: %d\n", m->data->key_len);
-    printf("| Key: ");
-    for (uint32_t i = 0; i < m->data->key_len; i++) printf("%c", m->data->key[i]);
-    printf("\n");
-    printf("| Value Length: %d\n", m->data->val_len);
-    if (m->data->value == NULL)return;
-    printf("| Value: ");
-    if (m->data->val_len < 20) {
-        for (uint32_t i = 0; i < m->data->val_len; i++) printf(" %d", m->data->value[i]);
-    } else {
-        printf(" [Value too long]");
-    }
-    printf(" )\n");
-    fflush(stdout);
-
-}
-
-int decode_external_header(uint8_t *buf, external_message *msg){
-    //determine ack
-    uint8_t ack = buf[0] & (uint8_t) 0x08; // 0x08 = 0000 1000
-    ack = ack >> (uint8_t) 3;
-    msg->ack = (bool) ack;
-
-    int8_t action = buf[0] & (uint8_t) 0x07; // 0x08 = 0000 0111
-    switch (action){
-        case 1: {
-            msg->type = DELETE;
-            break;
-        }
-        case 2: {
-            msg->type = SET;
-            break;
-        }
-        case 4: {
-            msg->type = GET;
-            break;
-        }
-        default: {
-            msg->type = NOT_DEFINED;
-            return -1;
-        }
-    }
-
-    // determine key length
-    uint16_t msb = buf[1] << (uint8_t) 8;
-    uint16_t lsb = buf[2];
-    msg->data->key_len = msb | lsb;
-
-    // determine value length
-    uint32_t b1 = buf[3] << (uint8_t) 24;
-    uint32_t b2 = buf[4] << (uint8_t) 16;
-    uint32_t b3 = buf[5] << (uint8_t) 8;
-    uint32_t b4 = buf[6];
-    msg->data->val_len = b1 | b2 | b3 | b4;
-
-    // Point to external_message
-    return 0;
-}
-uint16_t get_hash_id(uint8_t* key, uint16_t key_len){
-    uint16_t id = 0;
-    if(key_len >= 2){
-        id = key[0] << 8u;
-        id += key[1];
-    }else if(key_len == 1){
-        id = key[0];
-    }else if(key_len == 0)return 0;
-    return id;
-}
 int encode_external_message(uint8_t *buf, external_message *msg){
     msg->ack ? (buf[0] = (uint8_t) 0x08) : (buf[0] = (uint8_t) 0x00);
 
@@ -156,31 +61,50 @@ int encode_external_message(uint8_t *buf, external_message *msg){
     return EXTERNAL_HEADER_LEN + msg->data->key_len + msg->data->val_len;
 }
 
-void free_external_message(external_message* m){
-    if(m == NULL){
-        fprintf(stderr, "NUllpointer exception at : free messsage : m == NULL");
-        return;
+int decode_external_header(uint8_t *buf, external_message *msg){
+    //determine ack
+    uint8_t ack = buf[0] & (uint8_t) 0x08; // 0x08 = 0000 1000
+    ack = ack >> (uint8_t) 3;
+    msg->ack = (bool) ack;
+
+    int8_t action = buf[0] & (uint8_t) 0x07; // 0x08 = 0000 0111
+    switch (action){
+        case 1: {
+            msg->type = DELETE;
+            break;
+        }
+        case 2: {
+            msg->type = SET;
+            break;
+        }
+        case 4: {
+            msg->type = GET;
+            break;
+        }
+        default: {
+            msg->type = NOT_DEFINED;
+            return -1;
+        }
     }
-    if(m->data == NULL){
-        fprintf(stderr, "NUllpointer exception at : free messsage : data == NULL");
-        free(m);
-        return;
-    }
-    free_payload(m->data);
-    free(m);
+
+    // determine key length
+    uint16_t msb = buf[1] << (uint8_t) 8;
+    uint16_t lsb = buf[2];
+    msg->data->key_len = msb | lsb;
+
+    // determine value length
+    uint32_t b1 = buf[3] << (uint8_t) 24;
+    uint32_t b2 = buf[4] << (uint8_t) 16;
+    uint32_t b3 = buf[5] << (uint8_t) 8;
+    uint32_t b4 = buf[6];
+    msg->data->val_len = b1 | b2 | b3 | b4;
+
+    // Point to external_message
+    return 0;
 }
 
-external_message* create_empty_external_message(enum external_action to_do, bool b){
-    external_message* m = malloc(sizeof(external_message));
-    m->data = create_empty_payload();
-    m->type = to_do;
-    m->ack = b;
-    return m;
-}
 int send_external_message(external_message *m, int client_sock){
-#ifdef TEST
-    printf("\nSending");
-#endif
+
     int key_len = 0;
     int val_len = 0;
 
@@ -201,9 +125,7 @@ int send_external_message(external_message *m, int client_sock){
         fprintf(stderr, "Error while Encodeing Message\n");
         return -1;
     }
-#ifdef TEST
-    printf(" . ");
-#endif
+
     do {
 
         bytes_sent += send(client_sock, buf + bytes_sent, buf_len, 0);
@@ -213,22 +135,81 @@ int send_external_message(external_message *m, int client_sock){
             perror("Error while Sending Message: send() error");
             return -1;
         }
-#ifdef TEST
-        printf(" . ");
-#endif
+
 
     } while (bytes_sent < buf_len);
     free(buf);
-#ifdef TEST
-    printf(" . ");
-    printf("Sent:\n");
-    print_external_message(m);
-#endif
+    #ifdef TEST
+        printf("\nSent:\n");
+        print_external_message(m);
+    #endif
 
     return 0;
 }
-int compare_ext_messages(external_message* m, uint16_t* hash_id){
-    uint16_t expected = get_hash_id(m->data->key, m->data->key_len);
-    if(expected == *hash_id)return 1;
-    return 0;
+
+void free_external_message(external_message* m){
+    if(m == NULL){
+        fprintf(stderr, "NUllpointer exception at : free messsage : m == NULL");
+        return;
+    }
+    if(m->data == NULL){
+        fprintf(stderr, "NUllpointer exception at : free messsage : data == NULL");
+        free(m);
+        return;
+    }
+    free_payload(m->data);
+    free(m);
+}
+
+void print_external_message(external_message *m) {
+    if (m == NULL) {
+        printf("( Empty Message )");
+        return;
+    }
+    switch (m->type) {
+        case GET: {
+            printf("| Type: GET ");
+            break;
+        }
+        case SET: {
+            printf("| Type: SET ");
+            break;
+        }
+        case DELETE: {
+            printf("| Type: DELETE ");
+            break;
+        }
+        default: {
+            printf("| Type: NOT_DEFINED ");
+            break;
+        }
+    }
+    printf("| Ack: %d\n ", m->ack);
+    if (m->data == NULL)return;
+    printf("| Key Length: %d\n", m->data->key_len);
+    printf("| Key: ");
+    for (uint32_t i = 0; i < m->data->key_len; i++) printf("%c", m->data->key[i]);
+    printf("\n");
+    printf("| Value Length: %d\n", m->data->val_len);
+    if (m->data->value == NULL)return;
+    printf("| Value: ");
+    if (m->data->val_len < 20) {
+        for (uint32_t i = 0; i < m->data->val_len; i++) printf(" %d", m->data->value[i]);
+    } else {
+        printf(" [Value too long]");
+    }
+    printf(" )\n");
+    fflush(stdout);
+
+}
+
+uint16_t get_hash_id(uint8_t* key, uint16_t key_len){
+    uint16_t id = 0;
+    if(key_len >= 2){
+        id = key[0] << 8u;
+        id += key[1];
+    }else if(key_len == 1){
+        id = key[0];
+    }else if(key_len == 0)return 0;
+    return id;
 }

@@ -10,20 +10,26 @@
 #include "message.h"
 #include "list.h"
 #include "peer_help.h"
-
-
+//#define TEST
 
 uint32_t get_ipv4_addr(char *name);
 
-uint32_t ip_to_int(char* name);
-int setup_connection(char *port);
 /**
  * in - filled struct
  * out - staticly declared pointer
  * all inner alloc will be done in func
  * must be freed afterwards
  * */
-external_message* get_protocol_1_response(external_message *in, payload **hash);
+external_message* do_hashtable_action(external_message *in, payload **hash);
+
+int setup_listen_socket(uint16_t port_number, char * ip_str);
+
+int connect_to_peer(uint32_t ip, uint16_t port);
+
+int handle_internal_message(internal_message * m_in, peer_info * self, int socket, fd_set * master);
+
+int handle_external_message(external_message * m_ex, peer_info * self, int socket, fd_set * master);
+
 /**
  * in - message that came
  *  self - peer info struct fron reciever
@@ -31,7 +37,7 @@ external_message* get_protocol_1_response(external_message *in, payload **hash);
  * */
 int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* master);
 
-int connect_to_peer(uint32_t ip, uint16_t port);
+
 
 
 #endif //BLOCK4_PEER_FUNC_H
