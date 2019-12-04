@@ -210,8 +210,24 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
             return 0;
         }
         case STABILIZE: {
-            fprintf(stderr, "Stabalize: Not implemented\n");
-            return -1;
+            if (self->initialised_previous) {
+                // Update Prev
+                if( self->previous_id != m_in->node_id){
+                    self->previous_id = m_in->node_id;
+                    self->previous_ip = m_in->node_ip;
+                    self->previous_port = m_in->node_port;
+                }
+            }
+            else {
+                // Set Prev for first time
+                self->previous_id = m_in->node_id;
+                self->previous_ip = m_in->node_ip;
+                self->previous_port = m_in->node_port;
+                self->initialised_previous = true;
+            }
+            close(socket);
+            FD_CLR(socket, master);
+            return 0;
         }
         case NOTIFY: {
             fprintf(stderr, "Notify: Not implemented\n");

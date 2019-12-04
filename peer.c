@@ -15,7 +15,6 @@
 #define DG
 
 int main(int argc, char* argv[]){
-
     // Setup Peer Info
     peer_info self_info;
     payload * hash = NULL;
@@ -27,12 +26,10 @@ int main(int argc, char* argv[]){
     if(setup_peer_info(&self_info, argv, argc) == -1) {
         exit(EXIT_FAILURE);
     }
-
     #ifdef TEST
         printf("started peer :\n");
         print_peer_info_long(&self_info);
     #endif
-
     // setup connection
     SOCKET listen_sock = setup_listen_socket(self_info.self_port, argv[1]);
     if(listen_sock == -1) {
