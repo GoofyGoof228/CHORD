@@ -43,4 +43,6 @@ void refill_ft(peer_info* self);
 void search_for_successor(uint16_t id, peer_info* self);
 
 void free_ft(finger_table* ft);
+
+
 #endif //BLOCK5_FINGER_TABLE_H
