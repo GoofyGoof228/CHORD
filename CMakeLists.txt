@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 14)
 
 include_directories(include source)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -g")
+set(CMAKE_C_LINKER_FLAGS "${CMAKE_C_LINKER_FLAGS}$ -fsanitize=undefined -g")
 add_executable(peer peer.c
         include/external_message.h
         include/hash_table.h
@@ -26,4 +28,3 @@ add_executable(peer peer.c
         source/peer_netw.c
         source/finger_table.c
         )
-

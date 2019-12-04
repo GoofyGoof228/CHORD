@@ -7,12 +7,15 @@
 #include "peer_help.h"
 #include <arpa/inet.h>
 #include <errno.h>
-
+#include "finger_table.h"
 #define TEST
+#define COMMAND_LEN 15
 #define GETSOCKETERRNO() (errno)
 #define SOCKET int
 
-#define DG
+#ifdef TEST
+#include <string.h>
+#endif
 
 int main(int argc, char* argv[]){
 
@@ -21,7 +24,6 @@ int main(int argc, char* argv[]){
         exit(EXIT_FAILURE);
     }
     char * ip_string = argv[2];
-
     // Setup Peer Info
     peer_info self_info;
     payload * hash = NULL;
@@ -121,9 +123,23 @@ int main(int argc, char* argv[]){
                 }
                 else if(i == STDIN_FILENO){
                     // Shutdown
-                    running = false;
+                    #ifdef TEST
+                    char *command = calloc(COMMAND_LEN, sizeof(char));
+                    fscanf(stdin, "%s", command);
+                    fflush(stdin);
+                    if(strcmp(command, "ft") == 0){
+                        //TODO force to build ft
+                        printf("build a finger table !\n");
+                        create_ft(&self_info);
+                        init_fill_ft(&self_info);
+                    }
+                    if(strcmp(command, "stop") == 0){
+                        running = false;
+                    }
                     i = max_socket + 1;
                     continue;
+                    free(command);
+                    #endif
                 }
                 else {
                     message* m_in = malloc(sizeof(message));

@@ -9,7 +9,7 @@
 #include "peer_netw.h"
 #import <sys/socket.h>
 #include <unistd.h>
-
+#define NUM_BITS_IN_HASH 16
 uint16_t find_index(uint16_t id, finger_table* ft){
     for(int i = 0; i != ft->m; i++){
         if(ft->start_ids[i] == id) return i;
@@ -23,15 +23,16 @@ ft_entry* create_entry(uint16_t id, uint32_t ip, uint16_t port){
     new->port = port;
     return new;
 }
-finger_table* create_ft(uint32_t m, uint32_t n, peer_info* self){
+void create_ft(peer_info* self){
     finger_table* ft_new = malloc(sizeof(finger_table));
-    ft_new->m = m;
-    ft_new->n = n;
-    ft_new->start_ids = calloc(m, sizeof(uint16_t));
-    ft_new->entries = calloc(m, sizeof(ft_entry*));
-    return ft_new;
+    ft_new->m = NUM_BITS_IN_HASH;
+    ft_new->n = self->self_id;
+    ft_new->start_ids = calloc(NUM_BITS_IN_HASH, sizeof(uint16_t));
+    ft_new->entries = calloc(NUM_BITS_IN_HASH, sizeof(ft_entry*));
+    ft_new->filled = false;
+    self->ft = ft_new;
 }
-void fill_ft(peer_info* self){
+void init_fill_ft(peer_info* self){
     finger_table* ft = self->ft;
     uint16_t max_val = (uint16_t) powf( (float)2, (float) ft->m);
     for(int i = 0; i != ft->m; ++i){
@@ -46,10 +47,11 @@ void refill_ft(peer_info* self){
     for(int i = 0; i != ft->m; i++){
         free(ft->entries[i]);
     }
-    fill_ft(self);
+    //fill_ft(self);
 }
 
 void recieve_look_up(internal_message* lp, peer_info* self){
+    //TODO which flag should be set, to recongnise ft lookup answer ???
     uint16_t index = find_index(lp->hash_id, self->ft);
     finger_table* ft = self->ft;
     ft->entries[index] = create_entry(lp->node_id, lp->node_ip, lp->node_port);
@@ -66,6 +68,7 @@ void search_for_successor(uint16_t id, peer_info* self){
     int next_peer_sock = connect_to_peer(self->next_ip, self->next_port);
     send_internal_message(look_up, next_peer_sock);
     close(next_peer_sock);
+    free(look_up);
 
 }
 
