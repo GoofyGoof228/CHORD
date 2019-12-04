@@ -24,4 +24,7 @@ int recv_message(message *m, int sock);
 
 void free_message(message* old);
 
+
+//TODO save meta message in list
+
 #endif //BLOCK4_MESSAGE_H
