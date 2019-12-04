@@ -16,6 +16,12 @@
 
 int main(int argc, char* argv[]){
 
+    if(argc != 10){
+        fprintf(stderr,"Usage: ./peer (self) id ip port (previous) id ip port (next) id ip port\n");
+        exit(EXIT_FAILURE);
+    }
+    char * ip_string = argv[2];
+
     // Setup Peer Info
     peer_info self_info;
     payload * hash = NULL;
@@ -24,9 +30,17 @@ int main(int argc, char* argv[]){
     self_info.response_sockets_head = &response_socket_head;
     self_info.states = listCreate();
 
-    if(setup_peer_info(&self_info, argv, argc) == -1) {
-        exit(EXIT_FAILURE);
-    }
+    self_info.self_id = atoi(argv[1]);
+    self_info.self_ip = get_ipv4_addr(argv[2]);
+    self_info.self_port = atoi(argv[3]);
+
+    self_info.previous_id = atoi(argv[4]);
+    self_info.previous_ip = get_ipv4_addr(argv[5]);
+    self_info.previous_port = atoi(argv[6]);
+
+    self_info.next_id = atoi(argv[7]);
+    self_info.next_ip = get_ipv4_addr(argv[5]);
+    self_info.next_port = atoi(argv[9]);
 
     #ifdef TEST
         printf("started peer :\n");
@@ -34,7 +48,7 @@ int main(int argc, char* argv[]){
     #endif
 
     // setup connection
-    SOCKET listen_sock = setup_listen_socket(self_info.self_port, argv[1]);
+    SOCKET listen_sock = setup_listen_socket(self_info.self_port, ip_string);
     if(listen_sock == -1) {
         fprintf(stderr, " - setup_listen_socket\n");
         exit(EXIT_FAILURE);
