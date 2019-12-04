@@ -15,6 +15,7 @@ add_executable(peer peer.c
         include/peer_help.h
         include/peer_netw.h
         include/uthash.h
+        include/finger_table.h
         source/external_message.c
         source/hash_table.c
         source/internal_message.c
@@ -23,4 +24,5 @@ add_executable(peer peer.c
         source/payload.c
         source/peer_help.c
         source/peer_netw.c
+        source/finger_table.c
         )

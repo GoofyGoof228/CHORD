@@ -10,7 +10,7 @@
 #include "list.h"
 #include "internal_message.h"
 #include "external_message.h"
-#include "finger_table.h"
+//#include "finger_table.h"
 /**
  * must be filled at start up
  * list should be initialized with list create
@@ -33,7 +33,7 @@ struct _peer_info{
     payload** hash_head;
     payload** response_sockets_head;
     list* states;
-    finger_table* ft;
+    void* ft;
 
 };
 typedef struct _peer_info peer_info;

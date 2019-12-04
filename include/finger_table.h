@@ -6,6 +6,8 @@
 #define BLOCK5_FINGER_TABLE_H
 #include <stdint.h>
 #include "peer_help.h"
+#include "peer_netw.h"
+
 struct _ft_entry{
     uint16_t id;
     uint16_t port;
@@ -16,6 +18,7 @@ typedef struct _ft_entry ft_entry;
 struct _finger_table{
     uint32_t m; //number of bits in hash id
     uint32_t n; //id of peer having this ft
+    uint16_t* start_ids;
     ft_entry **entries;
 
 };
@@ -24,15 +27,20 @@ typedef struct _finger_table finger_table;
  * m - number of bits in hash id
  * n - id of peer having this ft
  * */
+
+uint16_t find_index(uint16_t id, finger_table* ft);
+
+ft_entry* create_entry(uint16_t id, uint32_t ip, uint16_t port);
+
 finger_table* create_ft(uint32_t m, uint32_t n, peer_info* self);
 
 void fill_ft(peer_info* self);
 
-void refill_ft(peer_info* self);
-ft_entry* find_peer(uint16_t id, peer_info* self);
+void recieve_look_up(internal_message* lp, peer_info* self);
 
-ft_entry* find_successor(uint16_t id);
-ft_entry* find_id(uint16_t id);
+void refill_ft(peer_info* self);
+
+void search_for_successor(uint16_t id, peer_info* self);
 
 void free_ft(finger_table* ft);
 #endif //BLOCK5_FINGER_TABLE_H

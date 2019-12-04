@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include "peer_netw.h"
 #include "hash_table.h"
+#include "peer_help.h"
 
 uint32_t get_ipv4_addr(char *name){
     int status;
