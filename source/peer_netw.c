@@ -230,6 +230,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
 
             close(socket);
             FD_CLR(socket, master);
+
             return 0;
         }
         case NOTIFY: {
@@ -251,12 +252,39 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
             }
             close(socket);
             FD_CLR(socket, master);
+
             return 0;
         }
         case JOIN: {
-            fprintf(stderr, "Join: Not implemented\n");
-            return -1;
+            // Do Join
+            if(is_between(m_in->hash_id, self->previous_id, self->self_id)) {
+                // Send Notify to Joining Node
+                internal_message * out = new_internal_message(NOTIFY, 0, self->self_id, self->self_ip, self->self_port);
+                int peer_sock = connect_to_peer(m_in->node_ip, m_in->node_port);
+                if(send_internal_message(out, peer_sock) == -1) {
+                    fprintf(stderr, " Sending Notify after Stabalize\n");
+                    return -1;
+                }
+                close(peer_sock);
 
+                // Update Prev
+                self->previous_id = m_in->node_id;
+                self->previous_ip = m_in->node_ip;
+                self->previous_port = m_in->node_port;
+            }
+            // Send to next node
+            else {
+                int peer_sock = connect_to_peer(self->next_ip, self->next_port);
+                if(send_internal_message(m_in, peer_sock) == -1) {
+                    fprintf(stderr, " Sending Notify after Stabalize\n");
+                    return -1;
+                }
+                close(peer_sock);
+            }
+            close(socket);
+            FD_CLR(socket, master);
+
+            return 0;
         }
         case F_ACK: {
             fprintf(stderr, "F_Ack: Not implemented\n");
