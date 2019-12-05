@@ -10,7 +10,7 @@
 #include "message.h"
 #include "list.h"
 #include "peer_help.h"
-//#define TEST
+#define TEST
 
 uint32_t get_ipv4_addr(char *name);
 

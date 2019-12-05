@@ -232,6 +232,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
             FD_CLR(socket, master);
 
             return 0;
+            break;
         }
         case NOTIFY: {
             if(self->initialised_next) {
@@ -254,11 +255,11 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
             FD_CLR(socket, master);
 
             return 0;
+            break;
         }
         case JOIN: {
             // Do Join
-
-            if((self->first_peer && !self->initialised_previous) || is_between(m_in->hash_id, self->previous_id, self->self_id) ) {
+            if((self->first_peer && !self->initialised_previous) || is_between(m_in->node_id, self->previous_id, self->self_id) ) {
                 // Send Notify to Joining Node
                 internal_message * out = new_internal_message(NOTIFY, 0, self->self_id, self->self_ip, self->self_port);
                 int peer_sock = connect_to_peer(m_in->node_ip, m_in->node_port);
@@ -272,6 +273,14 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                 self->previous_id = m_in->node_id;
                 self->previous_ip = m_in->node_ip;
                 self->previous_port = m_in->node_port;
+                self->initialised_previous = true;
+
+                if(!self->initialised_next){
+                    self->next_id = m_in->node_id;
+                    self->next_ip = m_in->node_ip;
+                    self->next_port = m_in->node_port;
+                    self->initialised_next = true;
+                }
             }
             // Send to next node
             else {

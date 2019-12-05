@@ -58,10 +58,10 @@ int main(int argc, char* argv[]){
     #endif
     // Start Join Process
     if(!self_info.first_peer) {
-        // Send Stabalize
-        internal_message *stabalize = new_internal_message(JOIN, 0, self_info.self_id, self_info.self_ip, self_info.self_port);
+        // Send Join
+        internal_message *join_msg = new_internal_message(JOIN, 0, self_info.self_id, self_info.self_ip, self_info.self_port);
         int peer_sock = connect_to_peer(self_info.join_ip, self_info.join_port);
-        if(send_internal_message(stabalize, peer_sock) == -1) {
+        if(send_internal_message(join_msg, peer_sock) == -1) {
             fprintf(stderr, " Sending Join to Entry Node\n");
             exit(EXIT_FAILURE);
         }
@@ -140,11 +140,12 @@ int main(int argc, char* argv[]){
                 else {
                     message* m_in = malloc(sizeof(message));
                     // Receive and Decode Message
-                    if(recv_message(m_in, i) == -1){
+                    if(recv_message(m_in, i) == -1) {
                         FD_CLR(i, &connections_storage);
                         close(i);
                         continue;
                     }
+
                     react_on_incoming_message(m_in, &self_info, i, &connections_storage);
                     free(m_in);
                 }
