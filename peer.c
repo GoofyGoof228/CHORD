@@ -56,15 +56,44 @@ int main(int argc, char* argv[]){
     #ifdef TEST
         printf("\nPress any key to quit \n");
     #endif
+    // Start Join Process
+    if(!self_info.first_peer) {
+        // Send Stabalize
+        internal_message *stabalize = new_internal_message(JOIN, 0, self_info.self_id, self_info.self_ip, self_info.self_port);
+        int peer_sock = connect_to_peer(self_info.join_ip, self_info.join_port);
+        if(send_internal_message(stabalize, peer_sock) == -1) {
+            fprintf(stderr, " Sending Join to Entry Node\n");
+            exit(EXIT_FAILURE);
+        }
+        close(peer_sock);
+    }
+
     while(running) {
         // copy FD set
         fd_set in_fd = connections_storage;
         // value 0 = wait until a socket is ready to get read from
-        if (select(max_socket+1, &in_fd, NULL, NULL, &tv) < 0) {
+        int rv = select(max_socket+1, &in_fd, NULL, NULL, &tv);
+
+        if (rv == -1) {
             // select modifies the input set
             fprintf(stderr, "Peer: select() failed. (%d)\n", GETSOCKETERRNO());
             perror("\n");
-            return -1;
+            exit(EXIT_FAILURE);
+        }
+        // Timout:
+        if (rv == 0) {
+            if (self_info.initialised_next){
+                // Send Stabalize
+                internal_message *stabalize = new_internal_message(STABILIZE, 0, self_info.self_id, self_info.self_ip, self_info.self_port);
+                int peer_sock = connect_to_peer(self_info.next_ip, self_info.next_port);
+                if(send_internal_message(stabalize, peer_sock) == -1) {
+                    fprintf(stderr, " Sending Stabalize\n");
+                    exit(EXIT_FAILURE);
+                }
+                close(peer_sock);
+
+            }
+            continue;
         }
         SOCKET i;
         for(i = 0; i <= max_socket; ++i) {

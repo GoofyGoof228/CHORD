@@ -24,7 +24,7 @@ int setup_peer_info(peer_info * self, char *argv[], int argc){
     self->next_port = 0;
 
     switch (argc) {
-        case 5: {
+        case 6: {
             self->self_ip = get_ipv4_addr(argv[1]);
             self->self_port = atoi(argv[2]);
             self->self_id = atoi(argv[3]);

@@ -108,13 +108,13 @@ int connect_to_peer(uint32_t ip, uint16_t port){
         sock = socket(i->ai_family, i->ai_socktype, i->ai_protocol);
 
         if(sock == -1){
-            perror("Client : socket\n");
+            perror("connect_to_peer : socket\n");
             continue;
         }
 
         if(connect(sock, server_adrr->ai_addr, server_adrr->ai_addrlen) == -1){
             close(sock);
-            perror("Client : connect\n");
+            perror("connect_to_peer : connect\n");
             continue;
         }
         break;
@@ -257,7 +257,8 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
         }
         case JOIN: {
             // Do Join
-            if(is_between(m_in->hash_id, self->previous_id, self->self_id)) {
+
+            if((self->first_peer && !self->initialised_previous) || is_between(m_in->hash_id, self->previous_id, self->self_id) ) {
                 // Send Notify to Joining Node
                 internal_message * out = new_internal_message(NOTIFY, 0, self->self_id, self->self_ip, self->self_port);
                 int peer_sock = connect_to_peer(m_in->node_ip, m_in->node_port);
@@ -375,7 +376,7 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
             print_internal_message(m_in);
         #endif
         res = handle_internal_message(m_in, self, socket, master);
-        free(in);
+        //free(in);
         return res;
     }
     else if(in->ext_msg != NULL){
@@ -385,7 +386,7 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
             print_external_message(m_ex);
         #endif
         res = handle_external_message(m_ex, self, socket, master);
-        free(in);
+        //free(in);
         return res;
     }
     else {
