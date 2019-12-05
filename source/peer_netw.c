@@ -208,34 +208,55 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
             free_external_message(to_send);
             free_payload(p);
             return 0;
+            break;
         }
         case STABILIZE: {
-            if (self->initialised_previous) {
-                // Update Prev
-                if( self->previous_id != m_in->node_id){
-                    self->previous_id = m_in->node_id;
-                    self->previous_ip = m_in->node_ip;
-                    self->previous_port = m_in->node_port;
-                }
-            }
-            else {
+            if (!self->initialised_previous) {
                 // Set Prev for first time
                 self->previous_id = m_in->node_id;
                 self->previous_ip = m_in->node_ip;
                 self->previous_port = m_in->node_port;
                 self->initialised_previous = true;
+
             }
+            // TODO Send Notify
+            internal_message * out = new_internal_message(NOTIFY, 0, self->previous_id, self->previous_ip, self->previous_port);
+            int peer_sock = connect_to_peer(m_in->node_ip, m_in->node_port);
+            if(send_internal_message(out, peer_sock) == -1) {
+                fprintf(stderr, " Sending Notify after Stabalize\n");
+                return -1;
+            }
+            close(peer_sock);
+
             close(socket);
             FD_CLR(socket, master);
             return 0;
         }
         case NOTIFY: {
-            fprintf(stderr, "Notify: Not implemented\n");
-            return -1;
+            if(self->initialised_next) {
+                // Check if I am Previous Node
+                if(self->self_id != m_in->node_id) {
+                    self->next_id = m_in->node_id;
+                    self->next_ip = m_in->node_ip;
+                    self->next_port = m_in->node_port;
+                }
+            }
+            // Joining in progress:
+            else {
+                // Set Successor
+                self->next_id = m_in->node_id;
+                self->next_ip = m_in->node_ip;
+                self->next_port = m_in->node_port;
+                self->initialised_next = true;
+            }
+            close(socket);
+            FD_CLR(socket, master);
+            return 0;
         }
         case JOIN: {
             fprintf(stderr, "Join: Not implemented\n");
             return -1;
+
         }
         case F_ACK: {
             fprintf(stderr, "F_Ack: Not implemented\n");
@@ -249,6 +270,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
             fprintf(stderr, "Unknown Internal Message Type\n");
             return -1;
         }
+
     }
 
 }
