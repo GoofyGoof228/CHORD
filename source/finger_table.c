@@ -59,12 +59,14 @@ void recieve_look_up(internal_message* lp, peer_info* self){
 }
 void search_for_successor(uint16_t id, peer_info* self){
     //TODO send "look up"
-    internal_message* look_up = malloc(sizeof(internal_message));
+    /*internal_message* look_up = malloc(sizeof(internal_message));
     look_up->hash_id = id;
     look_up->node_id = self->self_id;
     look_up->node_ip = self->self_ip;
     look_up->node_port = self->self_port;
-    look_up->type = LOOKUP;
+    look_up->type = LOOKUP;*/
+    internal_message *look_up = new_internal_message(LOOKUP, id, self->self_id, self->self_ip, self->self_ip);
+
     int next_peer_sock = connect_to_peer(self->next_ip, self->next_port);
     send_internal_message(look_up, next_peer_sock);
     close(next_peer_sock);
