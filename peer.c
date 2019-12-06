@@ -44,6 +44,8 @@ int main(int argc, char* argv[]){
     self_info.next_ip = get_ipv4_addr(argv[5]);
     self_info.next_port = atoi(argv[9]);
 
+    self_info.ft = NULL;
+
     #ifdef TEST
         printf("started peer :\n");
         print_peer_info_long(&self_info);
@@ -132,6 +134,10 @@ int main(int argc, char* argv[]){
                         printf("build a finger table !\n");
                         create_ft(&self_info);
                         init_fill_ft(&self_info);
+                    }
+                    if(strcmp(command, "ft_prt") == 0){
+                        printf("Finger table !\n");
+                        print_ft((finger_table*) self_info.ft);
                     }
                     if(strcmp(command, "stop") == 0){
                         running = false;

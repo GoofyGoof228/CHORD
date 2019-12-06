@@ -10,6 +10,7 @@
 #include "list.h"
 #include "internal_message.h"
 #include "external_message.h"
+#include "message.h"
 //#include "finger_table.h"
 /**
  * must be filled at start up
@@ -53,9 +54,9 @@ void print_peer_info_short(peer_info* self);
 
 void print_peer_info_long(peer_info* self);
 
-external_message* get_saved_state(list* states, uint16_t hash_id);
+message* get_saved_state(list* states, uint16_t hash_id, const int type);
 
-external_message* pop_saved_state(list* states, uint16_t hash_id);
+message* pop_saved_state(list* states, uint16_t hash_id, const int type);
 
 bool is_between(uint16_t hash, uint16_t prev, uint16_t now);
 

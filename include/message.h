@@ -8,6 +8,8 @@
 #include <stdbool.h>
 #include "internal_message.h"
 #include "external_message.h"
+#define INTERNAL_MES -17
+#define EXTERNAL_MES  -21
 /**
  * "meta" message
  * */
@@ -24,7 +26,7 @@ int recv_message(message *m, int sock);
 
 void free_message(message* old);
 
-
+message* create_wrapper(void* m, const int type);
 //TODO save meta message in list
 
 #endif //BLOCK4_MESSAGE_H

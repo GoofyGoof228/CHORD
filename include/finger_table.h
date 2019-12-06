@@ -29,6 +29,8 @@ typedef struct _finger_table finger_table;
  * n - id of peer having this ft
  * */
 
+bool ft_is_done(finger_table* ft);
+
 uint16_t find_index(uint16_t id, finger_table* ft);
 
 ft_entry* create_entry(uint16_t id, uint32_t ip, uint16_t port);
@@ -37,13 +39,14 @@ void create_ft(peer_info* self);
 
 void init_fill_ft(peer_info* self);
 
-void recieve_look_up(internal_message* lp, peer_info* self);
+void recieve_reply_ft(internal_message* lp, peer_info* self);
 
 void refill_ft(peer_info* self);
 
-void search_for_successor(uint16_t id, peer_info* self);
+int search_for_successor(uint16_t id, peer_info* self);
 
 void free_ft(finger_table* ft);
 
+void print_ft(finger_table* ft);
 
 #endif //BLOCK5_FINGER_TABLE_H

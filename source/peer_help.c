@@ -51,12 +51,13 @@ int setup_peer_info(peer_info * self, char *argv[], int argc){
     return 0;
 }
 
-external_message* get_saved_state(list* states, uint16_t hash_id){
+message* get_saved_state(list* states, uint16_t hash_id, const int type){
     //iterate over list and find right saved message
+    if(type == EXTERNAL_MES){
     listIterator* it = listIteratorCreate(states);
     external_message* to_send = listIteratorGetCurrentElement(it);
     while( to_send != NULL){
-        if(get_hash_id(to_send->data->key, to_send->data->key_len), hash_id){
+        if(get_hash_id(to_send->data->key, to_send->data->key_len) == hash_id){
             //right message found
             //listIteratorRemoveCurrent(it, NULL);
             break;
@@ -64,24 +65,61 @@ external_message* get_saved_state(list* states, uint16_t hash_id){
         to_send = listIteratorGetNextElement(it);
     }
     free(it);
-    return to_send;
+    return create_wrapper(to_send, EXTERNAL_MES);
+
+    }else if(type == INTERNAL_MES){
+
+        listIterator* it = listIteratorCreate(states);
+        internal_message* to_send = listIteratorGetCurrentElement(it);
+        while( to_send != NULL){
+            if(to_send->hash_id == hash_id){
+                //right message found
+                //listIteratorRemoveCurrent(it, NULL);
+                break;
+            }
+            to_send = listIteratorGetNextElement(it);
+        }
+        free(it);
+        return create_wrapper(to_send, INTERNAL_MES);
+    }
+    return NULL;
 }
 
-external_message* pop_saved_state(list* states, uint16_t hash_id){
+message* pop_saved_state(list* states, uint16_t hash_id, const int type){
     //iterate over list and find right saved message
-    listIterator* it = listIteratorCreate(states);
-    external_message* to_send = listIteratorGetCurrentElement(it);
-    while( to_send != NULL){
-        if(get_hash_id(to_send->data->key, to_send->data->key_len), hash_id){
-            //right message found
-            //listIteratorRemoveCurrent(it, NULL);
-            break;
+    //iterate over list and find right saved message
+    if(type == EXTERNAL_MES){
+        listIterator* it = listIteratorCreate(states);
+        external_message* to_send = listIteratorGetCurrentElement(it);
+        while( to_send != NULL){
+            if(get_hash_id(to_send->data->key, to_send->data->key_len) == hash_id){
+                //right message found
+                //listIteratorRemoveCurrent(it, NULL);
+                break;
+            }
+            to_send = listIteratorGetNextElement(it);
         }
-        to_send = listIteratorGetNextElement(it);
+        listIteratorRemoveCurrent(it, NULL);
+        free(it);
+        return create_wrapper(to_send, EXTERNAL_MES);
+
+    }else if(type == INTERNAL_MES){
+
+        listIterator* it = listIteratorCreate(states);
+        internal_message* to_send = listIteratorGetCurrentElement(it);
+        while( to_send != NULL){
+            if(to_send->hash_id == hash_id){
+                //right message found
+                //listIteratorRemoveCurrent(it, NULL);
+                break;
+            }
+            to_send = listIteratorGetNextElement(it);
+        }
+        listIteratorRemoveCurrent(it, NULL);
+        free(it);
+        return create_wrapper(to_send, INTERNAL_MES);
     }
-    listIteratorRemoveCurrent(it, NULL);
-    free(it);
-    return to_send;
+    return NULL;
 }
 
 bool is_between(uint16_t hash, uint16_t prev, uint16_t now){

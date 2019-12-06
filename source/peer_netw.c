@@ -9,6 +9,8 @@
 #include "peer_netw.h"
 #include "hash_table.h"
 #include "peer_help.h"
+#include "finger_table.h"
+
 
 uint32_t get_ipv4_addr(char *name){
     int status;
@@ -190,7 +192,14 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
             break;
         }
         case REPLY: {
-            external_message *to_send = get_saved_state(self->states, m_in->hash_id);
+
+            message *state = pop_saved_state(self->states, m_in->hash_id, EXTERNAL_MES);
+            if(state->int_msg->type == REPLY){
+                //ft
+                recieve_reply_ft(state->int_msg, self);
+                return 0;
+            }
+            external_message* to_send = state->ext_msg;
             if (to_send == NULL) {
                 fprintf(stderr, "Error : trying to send NULL external message\n");
                 return -1;
@@ -198,7 +207,6 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
 
             close(socket);
             FD_CLR(socket, master);
-
             int peer_sock = connect_to_peer(m_in->node_ip, m_in->node_port);
             send_external_message(to_send, peer_sock);
             FD_SET(peer_sock, master);
@@ -206,7 +214,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
             // Save the client socket
             payload *p = ints_to_payload(peer_sock, to_send->socket_recieved_from);
             h_set_p(self->response_sockets_head, p);
-            free_external_message(to_send);
+            free_message(state);
             free_payload(p);
             return 0;
         }
@@ -277,7 +285,8 @@ int handle_external_message(external_message * m_ex, peer_info * self, int socke
             // Send Lookup
         else{
             // save the state
-            listPushFront(self->states, m_ex);
+            message* to_save = create_wrapper(m_ex, EXTERNAL_MES);
+            listPushBack(self->states, to_save);
             // create Lookup message
             int hash_value = get_hash_id(m_ex->data->key, m_ex->data->key_len);
             internal_message * out = new_internal_message(LOOKUP, hash_value, self->self_id, self->self_ip, self->self_port); //create_look_up(m_ex, self);
