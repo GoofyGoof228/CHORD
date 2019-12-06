@@ -10,7 +10,7 @@
 #include "message.h"
 #include "list.h"
 #include "peer_help.h"
-#define TEST
+//#define TEST
 
 uint32_t get_ipv4_addr(char *name);
 
@@ -26,7 +26,7 @@ int setup_listen_socket(uint16_t port_number, char * ip_str);
 
 int connect_to_peer(uint32_t ip, uint16_t port);
 
-int handle_internal_message(internal_message * m_in, peer_info * self, int socket, fd_set * master);
+int handle_internal_message(internal_message * m_in, peer_info * self, fd_set * master);
 
 int handle_external_message(external_message * m_ex, peer_info * self, int socket, fd_set * master);
 

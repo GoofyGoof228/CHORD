@@ -49,11 +49,12 @@ int main(int argc, char* argv[]){
     FD_SET(listen_sock, &connections_storage);
     SOCKET max_socket = listen_sock;
 
-    FD_SET(STDIN_FILENO, &connections_storage);
-    if(STDIN_FILENO > max_socket){
-        max_socket = STDIN_FILENO;
-    }
     #ifdef TEST
+        // Add STD_IN For Termination
+        FD_SET(STDIN_FILENO, &connections_storage);
+        if(STDIN_FILENO > max_socket){
+            max_socket = STDIN_FILENO;
+        }
         printf("\nPress any key to quit \n");
     #endif
     // Start Join Process
@@ -131,12 +132,14 @@ int main(int argc, char* argv[]){
                         printf("\nNew connection from %d:%s at socket: %d\n", client_port, ipstr, client_sock);
                     #endif
                 }
-                else if(i == STDIN_FILENO){
-                    // Shutdown
-                    running = false;
-                    i = max_socket + 1;
-                    continue;
-                }
+                #ifdef TEST
+                    else if(i == STDIN_FILENO){
+                        // Shutdown
+                        running = false;
+                        i = max_socket + 1;
+                        continue;
+                    }
+                #endif
                 else {
                     message* m_in = malloc(sizeof(message));
                     // Receive and Decode Message

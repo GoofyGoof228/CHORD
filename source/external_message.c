@@ -184,7 +184,7 @@ void print_external_message(external_message *m) {
             break;
         }
     }
-    printf("| Ack: %d\n ", m->ack);
+    printf("| Ack: %d\n", m->ack);
     if (m->data == NULL)return;
     printf("| Key Length: %d\n", m->data->key_len);
     printf("| Key: ");
