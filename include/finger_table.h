@@ -43,7 +43,7 @@ void recieve_reply_ft(internal_message* lp, peer_info* self);
 
 void refill_ft(peer_info* self);
 
-int search_for_successor(uint16_t id, peer_info* self);
+void search_for_successor(uint16_t id, peer_info* self);
 
 void free_ft(finger_table* ft);
 

@@ -6,7 +6,9 @@
 #include <sys/socket.h>
 #include <stdint.h>
 #include "message.h"
-
+#ifndef TEST
+#define TEST
+#endif
 bool is_internal(uint8_t byte){
 
     uint8_t control = byte & (uint8_t) 0x80;
@@ -134,7 +136,18 @@ int recv_message(message *m, int sock){
 }
 
 void free_message(message* old){
-    if(old->ext_msg != NULL)free_external_message(old->ext_msg);
-    else if (old->int_msg != NULL)free(old->int_msg);
+    //if(old->ext_msg != NULL)free_external_message(old->ext_msg);
+    //else if (old->int_msg != NULL)free(old->int_msg);
     //free(old);
+}
+
+void print_message(message* m){
+    if(m->ext_msg == NULL && m->int_msg != NULL){
+        print_internal_message(m->int_msg);
+        return;
+    }else if(m->ext_msg != NULL && m->int_msg == NULL){
+        print_external_message(m->ext_msg);
+        return;
+    }
+    fprintf(stderr, "NULL message !\n");
 }

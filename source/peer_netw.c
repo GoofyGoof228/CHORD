@@ -10,7 +10,9 @@
 #include "hash_table.h"
 #include "peer_help.h"
 #include "finger_table.h"
-
+#ifndef TEST
+#define TEST
+#endif
 
 uint32_t get_ipv4_addr(char *name){
     int status;
@@ -111,13 +113,13 @@ int connect_to_peer(uint32_t ip, uint16_t port){
         sock = socket(i->ai_family, i->ai_socktype, i->ai_protocol);
 
         if(sock == -1){
-            perror("Client : socket\n");
+            perror("Peer : socket\n");
             continue;
         }
 
         if(connect(sock, server_adrr->ai_addr, server_adrr->ai_addrlen) == -1){
             close(sock);
-            perror("Client : connect\n");
+            perror("Peer : connect\n");
             continue;
         }
         break;
@@ -193,18 +195,21 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
         }
         case REPLY: {
 
-            message *state = pop_saved_state(self->states, m_in->hash_id, EXTERNAL_MES);
-            if(state->int_msg->type == REPLY){
+            message *state = pop_saved_state(self->states, m_in->hash_id, INTERNAL_MES);
+
+            if(state->int_msg->type == LOOKUP){
                 //ft
                 recieve_reply_ft(state->int_msg, self);
+                close(socket);
+                FD_CLR(socket, master);
                 return 0;
             }
+
             external_message* to_send = state->ext_msg;
             if (to_send == NULL) {
                 fprintf(stderr, "Error : trying to send NULL external message\n");
                 return -1;
             }
-
             close(socket);
             FD_CLR(socket, master);
             int peer_sock = connect_to_peer(m_in->node_ip, m_in->node_port);

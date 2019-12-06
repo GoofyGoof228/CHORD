@@ -6,7 +6,9 @@
 
 #include <stdio.h>
 #include <sys/socket.h>
-
+#ifndef TEST
+#define TEST
+#endif
 int encode_external_message(uint8_t *buf, external_message *msg){
     msg->ack ? (buf[0] = (uint8_t) 0x08) : (buf[0] = (uint8_t) 0x00);
 
@@ -104,7 +106,11 @@ int decode_external_header(uint8_t *buf, external_message *msg){
 }
 
 int send_external_message(external_message *m, int client_sock){
-
+#ifdef TEST
+    printf("sending\n");
+    print_external_message(m);
+    fflush(stdout);
+#endif
     int key_len = 0;
     int val_len = 0;
 
@@ -142,6 +148,7 @@ int send_external_message(external_message *m, int client_sock){
     #ifdef TEST
         printf("\nSent:\n");
         print_external_message(m);
+        fflush(stdout);
     #endif
 
     return 0;

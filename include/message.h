@@ -29,4 +29,5 @@ void free_message(message* old);
 message* create_wrapper(void* m, const int type);
 //TODO save meta message in list
 
+void print_message(message* m);
 #endif //BLOCK4_MESSAGE_H

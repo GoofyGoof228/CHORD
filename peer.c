@@ -75,7 +75,8 @@ int main(int argc, char* argv[]){
         max_socket = STDIN_FILENO;
     }
     #ifdef TEST
-        printf("\nPress any key to quit \n");
+        printf("\ncommand : \n");
+        fflush(stdout);
     #endif
     while(running) {
         // copy FD set
@@ -135,16 +136,17 @@ int main(int argc, char* argv[]){
                         create_ft(&self_info);
                         init_fill_ft(&self_info);
                     }
-                    if(strcmp(command, "ft_prt") == 0){
+                    if(strcmp(command, "ft_print") == 0){
+                        finger_table* FT = self_info.ft;
                         printf("Finger table !\n");
                         print_ft((finger_table*) self_info.ft);
                     }
                     if(strcmp(command, "stop") == 0){
                         running = false;
                     }
-                    i = max_socket + 1;
-                    continue;
+                    //i = max_socket + 1;
                     free(command);
+                    continue;
                     #endif
                 }
                 else {
@@ -155,8 +157,14 @@ int main(int argc, char* argv[]){
                         close(i);
                         continue;
                     }
+                    #ifdef TEST
+                    printf("recieved: \n");
+                    print_message(m_in);
+                    fflush(stdout);
+                    fflush(stdin);
+                    #endif
                     react_on_incoming_message(m_in, &self_info, i, &connections_storage);
-                    free(m_in);
+                    free_message(m_in);
                 }
             }
         }

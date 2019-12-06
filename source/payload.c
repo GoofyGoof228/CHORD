@@ -4,7 +4,9 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "payload.h"
-
+#ifndef TEST
+#define TEST
+#endif
 payload* create_empty_payload(){
     payload* p = calloc(1, sizeof(payload));
     p->key = calloc(0, sizeof(uint8_t));
