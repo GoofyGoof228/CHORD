@@ -60,4 +60,47 @@ message* pop_saved_state(list* states, uint16_t hash_id, const int type);
 
 bool is_between(uint16_t hash, uint16_t prev, uint16_t now);
 
+/**finget tabele**/
+
+struct _ft_entry{
+    uint16_t id;
+    uint16_t port;
+    uint32_t ip;
+};
+typedef struct _ft_entry ft_entry;
+
+struct _finger_table{
+    uint32_t m; //number of bits in hash id
+    uint32_t n; //id of peer having this ft
+    uint16_t* start_ids;
+    ft_entry **entries;
+    bool filled;
+
+};
+typedef struct _finger_table finger_table;
+/**
+ * m - number of bits in hash id
+ * n - id of peer having this ft
+ * */
+
+bool ft_is_done(finger_table* ft);
+
+uint16_t find_index(uint16_t id, finger_table* ft);
+
+ft_entry* create_entry(uint16_t id, uint32_t ip, uint16_t port);
+
+void create_ft(peer_info* self);
+
+void init_fill_ft(peer_info* self);
+
+void recieve_reply_ft(internal_message* lp, peer_info* self);
+
+void refill_ft(peer_info* self);
+
+void search_for_successor(uint16_t id, peer_info* self);
+
+void free_ft(finger_table* ft);
+
+void print_ft(finger_table* ft);
+
 #endif //BLOCK4_PEER_HELP_H
