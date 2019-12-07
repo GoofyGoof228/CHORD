@@ -307,12 +307,14 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
         }
         case F_ACK: {
             fprintf(stderr, "F_Ack: Not implemented\n");
+            //TODO receive ack, delete saved state ??
             return -1;
             break;
 
         }
         case FINGER: {
-            fprintf(stderr, "Finger: Not implemented\n");
+            create_ft(self, socket);
+            init_fill_ft(self);
             return -1;
             break;
 

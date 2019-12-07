@@ -42,7 +42,7 @@ ft_entry* create_entry(uint16_t id, uint32_t ip, uint16_t port){
     new->port = port;
     return new;
 }
-void create_ft(peer_info* self){
+void create_ft(peer_info* self, int socket){
     finger_table* ft_new = malloc(sizeof(finger_table));
     ft_new->m = NUM_BITS_IN_HASH;
     ft_new->n = self->self_id;
@@ -54,7 +54,7 @@ void create_ft(peer_info* self){
 }
 void init_fill_ft(peer_info* self){
     finger_table* ft = self->ft;
-    uint32_t max_val = (uint32_t) powi( 2, ft->m);
+    uint32_t max_val =  powi( 2, ft->m);
     for(int i = 0; i != ft->m; ++i){
         uint16_t start = ft->n + powi( 2, i) % max_val;
         ft->start_ids[i] = start;
@@ -85,7 +85,18 @@ void recieve_reply_ft(internal_message* lp, peer_info* self){
     int index = find_index(lp->hash_id, (finger_table*) self->ft);
     finger_table *ft = self->ft;
     ft->entries[index] = create_entry(lp->node_id, lp->node_ip, lp->node_port);
-    ft_is_done(ft);
+    if(ft_is_done(ft)){
+        //case for commando-line
+        if(((finger_table*)self->ft)->socket_asked_to_dew_it == -1)return;
+        //TODO send ack
+        internal_message out;
+        out.hash_id = ((finger_table*)self->ft)->n;
+        out.node_id = self->self_id;
+        out.node_ip = self->self_ip;
+        out.node_port = self->self_port;
+        send_internal_message(&out, ((finger_table*)self->ft)->socket_asked_to_dew_it);
+        close(((finger_table*)self->ft)->socket_asked_to_dew_it);
+    }
 }
 void search_for_successor(uint16_t id, peer_info* self){
     //TODO send "look up"

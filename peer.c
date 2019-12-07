@@ -164,7 +164,7 @@ int main(int argc, char* argv[]){
                     if(strcmp(command, "ft") == 0){
                         //TODO force to build ft
                         printf("build a finger table !\n");
-                        create_ft(&self_info);
+                        create_ft(&self_info, -1);
                         init_fill_ft(&self_info);
                     }
                     if(strcmp(command, "ft_print") == 0){
