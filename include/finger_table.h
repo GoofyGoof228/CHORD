@@ -21,7 +21,7 @@ struct _finger_table{
     uint16_t* start_ids;
     ft_entry **entries;
     bool filled;
-    int socket_asked_to_dew_it;
+    int socket_asked_to_dew_it;     //fuck
 
 };
 typedef struct _finger_table finger_table;
