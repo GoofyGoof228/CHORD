@@ -201,6 +201,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
             if(state->int_msg->type == LOOKUP){
                 //ft
                 recieve_reply_ft(state->int_msg, self);
+                free_message(state);
                 close(socket);
                 FD_CLR(socket, master);
                 return 0;
@@ -325,7 +326,7 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
             print_internal_message(m_in);
         #endif
         res = handle_internal_message(m_in, self, socket, master);
-        free(in);
+        free_message(in);
         return res;
     }
     else if(in->ext_msg != NULL){

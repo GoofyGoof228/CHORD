@@ -136,9 +136,9 @@ int recv_message(message *m, int sock){
 }
 
 void free_message(message* old){
-    //if(old->ext_msg != NULL)free_external_message(old->ext_msg);
-    //else if (old->int_msg != NULL)free(old->int_msg);
-    //free(old);
+    if(old->ext_msg != NULL)free_external_message(old->ext_msg);
+    else if (old->int_msg != NULL)free(old->int_msg);
+    free(old);
 }
 
 void print_message(message* m){

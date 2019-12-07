@@ -170,7 +170,7 @@ int main(int argc, char* argv[]){
                     fflush(stdin);
                     #endif
                     react_on_incoming_message(m_in, &self_info, i, &connections_storage);
-                    free_message(m_in);
+                    //free_message(m_in);
                 }
             }
         }
