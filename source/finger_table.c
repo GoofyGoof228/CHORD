@@ -51,6 +51,7 @@ void create_ft(peer_info* self, int socket){
     for(int i = 0; i!= NUM_BITS_IN_HASH; ++i)ft_new->entries[i] = NULL;
     ft_new->filled = false;
     self->ft = ft_new;
+    ft_new->socket_asked_to_dew_it = socket;
 }
 void init_fill_ft(peer_info* self){
     finger_table* ft = self->ft;
