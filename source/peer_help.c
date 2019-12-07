@@ -53,42 +53,6 @@ int setup_peer_info(peer_info * self, char *argv[], int argc){
     return 0;
 }
 
-message* get_saved_state(list* states, uint16_t hash_id, const int type){
-    if(type == EXTERNAL_MES){
-        listIterator* it = listIteratorCreate(states);
-        message* help = listIteratorGetCurrentElement(it);
-        external_message* to_send = help->ext_msg;
-        while( to_send != NULL && it->current != NULL){
-            if(get_hash_id(to_send->data->key, to_send->data->key_len) == hash_id){
-                //right message found
-                //listIteratorRemoveCurrent(it, NULL);
-                break;
-            }
-            to_send = listIteratorGetNextElement(it);
-        }
-      //  listIteratorRemoveCurrent(it, NULL);
-        free(it);
-        return create_wrapper(to_send, EXTERNAL_MES);
-
-    }else if(type == INTERNAL_MES){
-
-        listIterator* it = listIteratorCreate(states);
-        message* help = listIteratorGetCurrentElement(it);
-        internal_message * to_send = help->int_msg;
-        while( to_send != NULL){
-            if(to_send->hash_id == hash_id){
-                //right message found
-                //listIteratorRemoveCurrent(it, NULL);
-                break;
-            }
-            to_send = listIteratorGetNextElement(it);
-        }
-       // listIteratorRemoveCurrent(it, NULL);
-        free(it);
-        return create_wrapper(to_send, INTERNAL_MES);
-    }
-    return NULL;
-}
 
 message* pop_saved_state(list* states, uint16_t hash_id, const int type){
     //iterate over list and find right saved message
@@ -96,35 +60,37 @@ message* pop_saved_state(list* states, uint16_t hash_id, const int type){
     if(type == EXTERNAL_MES){
         listIterator* it = listIteratorCreate(states);
         message* help = listIteratorGetCurrentElement(it);
-        external_message* to_send = help->ext_msg;
-        while( to_send != NULL && it->current != NULL){
-            if(get_hash_id(to_send->data->key, to_send->data->key_len) == hash_id){
+        external_message* help_ext = help->ext_msg;
+        while( help_ext != NULL && it->current != NULL){
+            if(get_hash_id(help_ext->data->key, help_ext->data->key_len) == hash_id){
                 //right message found
                 //listIteratorRemoveCurrent(it, NULL);
                 break;
             }
-            to_send = listIteratorGetNextElement(it);
+            help = listIteratorGetNextElement(it);
+            help_ext = help->ext_msg;
         }
         listIteratorRemoveCurrent(it, NULL);
         free(it);
-        return create_wrapper(to_send, EXTERNAL_MES);
+        return help;
 
     }else if(type == INTERNAL_MES){
 
         listIterator* it = listIteratorCreate(states);
         message* help = listIteratorGetCurrentElement(it);
-        internal_message * to_send = help->int_msg;
-        while( to_send != NULL){
-            if(to_send->hash_id == hash_id){
+        internal_message * help_in = help->int_msg;
+        while( help_in != NULL){
+            if(help_in->hash_id == hash_id){
                 //right message found
                 //listIteratorRemoveCurrent(it, NULL);
                 break;
             }
-            to_send = listIteratorGetNextElement(it);
+            help = listIteratorGetNextElement(it);
+            help_in = help->int_msg;
         }
         listIteratorRemoveCurrent(it, NULL);
         free(it);
-        return create_wrapper(to_send, INTERNAL_MES);
+        return help;
     }
     return NULL;
 }
