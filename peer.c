@@ -18,12 +18,6 @@
 #endif
 
 int main(int argc, char* argv[]){
-
-    if(argc != 10){
-        fprintf(stderr,"Usage: ./peer (self) id ip port (previous) id ip port (next) id ip port\n");
-        exit(EXIT_FAILURE);
-    }
-    char * ip_string = argv[2];
     // Setup Peer Info
     peer_info self_info;
     payload * hash = NULL;
@@ -32,25 +26,13 @@ int main(int argc, char* argv[]){
     self_info.response_sockets_head = &response_socket_head;
     self_info.states = listCreate();
 
-    self_info.self_id = atoi(argv[1]);
-    self_info.self_ip = get_ipv4_addr(argv[2]);
-    self_info.self_port = atoi(argv[3]);
-
-    self_info.previous_id = atoi(argv[4]);
-    self_info.previous_ip = get_ipv4_addr(argv[5]);
-    self_info.previous_port = atoi(argv[6]);
-
-    self_info.next_id = atoi(argv[7]);
-    self_info.next_ip = get_ipv4_addr(argv[5]);
-    self_info.next_port = atoi(argv[9]);
-
-    self_info.ft = NULL;
-
+    if(setup_peer_info(&self_info, argv, argc) == -1) {
+        exit(EXIT_FAILURE);
+    }
     #ifdef TEST
         printf("started peer :\n");
         print_peer_info_long(&self_info);
     #endif
-
     // setup connection
     SOCKET listen_sock = setup_listen_socket(self_info.self_port, ip_string);
     if(listen_sock == -1) {
@@ -70,23 +52,48 @@ int main(int argc, char* argv[]){
     FD_SET(listen_sock, &connections_storage);
     SOCKET max_socket = listen_sock;
 
-    FD_SET(STDIN_FILENO, &connections_storage);
-    if(STDIN_FILENO > max_socket){
-        max_socket = STDIN_FILENO;
-    }
     #ifdef TEST
         printf("\ncommand : \n");
         fflush(stdout);
     #endif
+    // Start Join Process
+    if(!self_info.first_peer) {
+        // Send Join
+        internal_message *join_msg = new_internal_message(JOIN, 0, self_info.self_id, self_info.self_ip, self_info.self_port);
+        int peer_sock = connect_to_peer(self_info.join_ip, self_info.join_port);
+        if(send_internal_message(join_msg, peer_sock) == -1) {
+            fprintf(stderr, " Sending Join to Entry Node\n");
+            exit(EXIT_FAILURE);
+        }
+        close(peer_sock);
+    }
+
     while(running) {
         // copy FD set
         fd_set in_fd = connections_storage;
         // value 0 = wait until a socket is ready to get read from
-        if (select(max_socket+1, &in_fd, NULL, NULL, &tv) < 0) {
+        int rv = select(max_socket+1, &in_fd, NULL, NULL, &tv);
+
+        if (rv == -1) {
             // select modifies the input set
             fprintf(stderr, "Peer: select() failed. (%d)\n", GETSOCKETERRNO());
             perror("\n");
-            return -1;
+            exit(EXIT_FAILURE);
+        }
+        // Timout:
+        if (rv == 0) {
+            if (self_info.initialised_next){
+                // Send Stabalize
+                internal_message *stabalize = new_internal_message(STABILIZE, 0, self_info.self_id, self_info.self_ip, self_info.self_port);
+                int peer_sock = connect_to_peer(self_info.next_ip, self_info.next_port);
+                if(send_internal_message(stabalize, peer_sock) == -1) {
+                    fprintf(stderr, " Sending Stabalize\n");
+                    exit(EXIT_FAILURE);
+                }
+                close(peer_sock);
+
+            }
+            continue;
         }
         SOCKET i;
         for(i = 0; i <= max_socket; ++i) {
@@ -159,7 +166,7 @@ int main(int argc, char* argv[]){
                 else {
                     message* m_in = malloc(sizeof(message));
                     // Receive and Decode Message
-                    if(recv_message(m_in, i) == -1){
+                    if(recv_message(m_in, i) == -1) {
                         FD_CLR(i, &connections_storage);
                         close(i);
                         continue;

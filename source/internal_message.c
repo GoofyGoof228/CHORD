@@ -168,10 +168,7 @@ int send_internal_message(internal_message *m, int sock){
             return -1;
         }
     } while (bytes_sent < buf_len);
-    #ifdef TEST
-    printf("\nSent:\n");
-    print_internal_message(m);
-    #endif
+
     free(buf);
 
     return 0;
@@ -197,7 +194,18 @@ void print_internal_message(internal_message* m){
     }
     printf("internal message\n");
     printf("----------------\n");
-    printf("type : %s\n", (m->type == LOOKUP)? "LOOKUP" : "REPLY");
+    printf("type : ");
+    switch (m->type){
+        case LOOKUP: printf("LOOKUP\n"); break;
+        case REPLY: printf("REPLY\n"); break;
+        case JOIN: printf("JOIN\n"); break;
+        case STABILIZE: printf("STABILIZE\n"); break;
+        case NOTIFY: printf("NOTIFY\n"); break;
+        case FINGER: printf("FINGER\n"); break;
+        case F_ACK: printf("F_ACK\n"); break;
+        default: printf("Unknown\n");
+    }
+
     printf("hash id : %d\n", m->hash_id);
     printf("node id : %d\n", m->node_id);
     char buf[INET_ADDRSTRLEN];
