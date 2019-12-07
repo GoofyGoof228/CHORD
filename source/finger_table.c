@@ -112,6 +112,7 @@ void free_ft(finger_table* ft){
         free(ft->entries[i]);
     }
     free(ft->entries);
+    free(ft->start_ids);
     free(ft);
 }
 

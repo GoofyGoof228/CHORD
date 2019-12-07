@@ -143,6 +143,7 @@ int main(int argc, char* argv[]){
                     }
                     if(strcmp(command, "stop") == 0){
                         running = false;
+
                     }
                     if(strcmp(command, "powi") == 0){
                         uint16_t x = 2;
@@ -170,10 +171,14 @@ int main(int argc, char* argv[]){
                     fflush(stdin);
                     #endif
                     react_on_incoming_message(m_in, &self_info, i, &connections_storage);
+                    //message is being freed in reac_on bla bla
                     //free_message(m_in);
                 }
             }
         }
+    }
+    if(self_info.ft != NULL){
+        if( ((finger_table*)self_info.ft)->filled)free_ft(self_info.ft);
     }
     h_free(self_info.hash_head);
     h_free(self_info.response_sockets_head);
