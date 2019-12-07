@@ -168,7 +168,7 @@ external_message* do_hashtable_action(external_message *in, payload **hash){
     return out;
 }
 
-int handle_internal_message(internal_message * m_in, peer_info * self, fd_set * master) {
+int handle_internal_message(internal_message * m_in, peer_info * self, int socket, fd_set * master) {
     int peer_socket = -1;
 
     switch(m_in->type) {

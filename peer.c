@@ -17,6 +17,8 @@
 #include <string.h>
 #endif
 
+
+#define STATIC_RING
 int main(int argc, char* argv[]){
     // Setup Peer Info
     peer_info self_info;
@@ -25,16 +27,32 @@ int main(int argc, char* argv[]){
     self_info.hash_head = &hash;
     self_info.response_sockets_head = &response_socket_head;
     self_info.states = listCreate();
-
+#ifndef STATIC_RING
     if(setup_peer_info(&self_info, argv, argc) == -1) {
         exit(EXIT_FAILURE);
     }
+#endif
+#ifdef STATIC_RING
+    self_info.self_id = atoi(argv[1]);
+    self_info.self_ip = get_ipv4_addr(argv[2]);
+    self_info.self_port = atoi(argv[3]);
+
+    self_info.previous_id = atoi(argv[4]);
+    self_info.previous_ip = get_ipv4_addr(argv[5]);
+    self_info.previous_port = atoi(argv[6]);
+
+    self_info.next_id = atoi(argv[7]);
+    self_info.next_ip = get_ipv4_addr(argv[5]);
+    self_info.next_port = atoi(argv[9]);
+
+    self_info.ft = NULL;
+#endif
     #ifdef TEST
         printf("started peer :\n");
         print_peer_info_long(&self_info);
     #endif
     // setup connection
-    SOCKET listen_sock = setup_listen_socket(self_info.self_port, ip_string);
+    SOCKET listen_sock = setup_listen_socket(self_info.self_port, argv[2]);
     if(listen_sock == -1) {
         fprintf(stderr, " - setup_listen_socket\n");
         exit(EXIT_FAILURE);
@@ -43,7 +61,6 @@ int main(int argc, char* argv[]){
     struct timeval tv;
     tv.tv_sec = 2;
     tv.tv_usec = 0;
-
     bool running = true;
 
     fd_set connections_storage;
@@ -52,10 +69,15 @@ int main(int argc, char* argv[]){
     FD_SET(listen_sock, &connections_storage);
     SOCKET max_socket = listen_sock;
 
+    FD_SET(STDIN_FILENO, &connections_storage);
+    if(STDIN_FILENO > max_socket){
+        max_socket = STDIN_FILENO;
+    }
     #ifdef TEST
         printf("\ncommand : \n");
         fflush(stdout);
     #endif
+    #ifndef STATIC_RING
     // Start Join Process
     if(!self_info.first_peer) {
         // Send Join
@@ -67,7 +89,7 @@ int main(int argc, char* argv[]){
         }
         close(peer_sock);
     }
-
+    #endif
     while(running) {
         // copy FD set
         fd_set in_fd = connections_storage;
@@ -81,6 +103,7 @@ int main(int argc, char* argv[]){
             exit(EXIT_FAILURE);
         }
         // Timout:
+#ifndef STATIC_RING
         if (rv == 0) {
             if (self_info.initialised_next){
                 // Send Stabalize
@@ -95,6 +118,7 @@ int main(int argc, char* argv[]){
             }
             continue;
         }
+#endif
         SOCKET i;
         for(i = 0; i <= max_socket; ++i) {
             // FD_ISSET is true if a socket was flagged as ready from select
@@ -150,6 +174,7 @@ int main(int argc, char* argv[]){
                     }
                     if(strcmp(command, "stop") == 0){
                         running = false;
+                        //break;
 
                     }
                     if(strcmp(command, "powi") == 0){
