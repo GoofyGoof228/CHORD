@@ -16,8 +16,9 @@
 struct _message {
     bool internal;
     //TODO add union
-    external_message *ext_msg;
-    internal_message *int_msg;
+        external_message *ext_msg;
+        internal_message *int_msg;
+
 };
 typedef struct _message message;
 
