@@ -144,6 +144,12 @@ int main(int argc, char* argv[]){
                     if(strcmp(command, "stop") == 0){
                         running = false;
                     }
+                    if(strcmp(command, "powi") == 0){
+                        uint16_t x = 2;
+                        uint16_t e = 10;
+                        printf("%d to power of %d = %d", x, e, powi(x, e));
+
+                    }
                     //i = max_socket + 1;
                     free(command);
                     continue;

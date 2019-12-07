@@ -4,7 +4,7 @@
 
 #include "finger_table.h"
 #include <stdlib.h>
-#include <math.h>
+//#include <math.h>
 #include <stdint.h>
 #include "peer_netw.h"
 #import <sys/socket.h>
@@ -14,6 +14,11 @@
 #ifndef TEST
 #define TEST
 #endif
+
+uint32_t powi(uint16_t base, uint16_t exp){
+    if(exp == 0) return 1;
+    return base * powi(base, exp-1);
+}
 uint16_t find_index(uint16_t id, finger_table* ft){
     for(int i = 0; i != ft->m; i++){
         if(ft->start_ids[i] == id) return i;
@@ -49,9 +54,9 @@ void create_ft(peer_info* self){
 }
 void init_fill_ft(peer_info* self){
     finger_table* ft = self->ft;
-    uint32_t max_val = (uint32_t) powf( (float)2, (float) ft->m);
+    uint32_t max_val = (uint32_t) powi( 2, ft->m);
     for(int i = 0; i != ft->m; ++i){
-        uint16_t start = ft->n + ((uint16_t)powf( (float)2, (float)i) ) % max_val;
+        uint16_t start = ft->n + powi( 2, i) % max_val;
         ft->start_ids[i] = start;
         if(is_between(ft->start_ids[i], self->previous_id, self->self_id)){
             ft->entries[i] = create_entry(self->self_id, self->self_ip, self->self_port);

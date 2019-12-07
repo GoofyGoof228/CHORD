@@ -4,7 +4,6 @@
 
 #ifndef BLOCK4_PEER_FUNC_H
 #define BLOCK4_PEER_FUNC_H
-
 #include <netdb.h>
 #include <stdio.h>
 #include "message.h"

@@ -10,6 +10,7 @@
 #include "hash_table.h"
 #include "peer_help.h"
 #include "finger_table.h"
+#include <netdb.h>
 #ifndef TEST
 #define TEST
 #endif

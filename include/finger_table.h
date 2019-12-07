@@ -6,7 +6,7 @@
 #define BLOCK5_FINGER_TABLE_H
 #include <stdint.h>
 #include "peer_help.h"
-#include "peer_netw.h"
+//#include "peer_netw.h"
 
 struct _ft_entry{
     uint16_t id;
@@ -24,6 +24,8 @@ struct _finger_table{
 
 };
 typedef struct _finger_table finger_table;
+
+uint32_t powi(uint16_t base, uint16_t exp);
 /**
  * m - number of bits in hash id
  * n - id of peer having this ft
