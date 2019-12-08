@@ -203,7 +203,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
             message *state = pop_saved_state(self->states, m_in->hash_id, INTERNAL_MES);
 
             if(state->int_msg->type == LOOKUP){
-                //ft
+                //TODO finish FT
                 recieve_reply_ft(state->int_msg, self);
                 free_message(state);
                 close(socket);
@@ -307,7 +307,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
         }
         case F_ACK: {
             fprintf(stderr, "F_Ack: Not implemented\n");
-            //TODO receive ack, delete saved state ??
+            //TO DO receive ack, delete saved state ??
             return -1;
             break;
 
@@ -315,7 +315,6 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
         case FINGER: {
             create_ft(self, socket);
             init_fill_ft(self);
-            return -1;
             break;
 
         }
