@@ -122,7 +122,7 @@ int main(int argc, char* argv[]){
         }
         // Timeout:
         if (rv == 0) {
-            if (self_info.initialised_next){
+            if (join_is_done(&self_info)){
                 // Send Stabalize
                 internal_message *stabalize = new_internal_message(STABILIZE, 0, self_info.self_id, self_info.self_ip, self_info.self_port);
                 int peer_sock = connect_to_peer(self_info.next_ip, self_info.next_port);
@@ -193,11 +193,8 @@ int main(int argc, char* argv[]){
                         //break;
 
                     }
-                    if(strcmp(command, "powi") == 0){
-                        uint16_t x = 2;
-                        uint16_t e = 10;
-                        printf("%d to power of %d = %d", x, e, powi(x, e));
-
+                    if(strcmp(command, "info") == 0){
+                        print_peer_info_long(&self_info);
                     }
                     //i = max_socket + 1;
                     free(command);
