@@ -27,3 +27,13 @@ add later to cmake set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DI
 40000 localhost 4007 35000 localhost 4006 45000 localhost 4008
 45000 localhost 4008 40000 localhost 4007 50000 localhost 4009
 50000 localhost 4009 45000 localhost 4008 10000 localhost 4001
+
+
+10000 localhost 4001 40000 localhost 4007 25000 localhost 4004
+25000 localhost 4004 10000 localhost 4001 40000 localhost 4007
+40000 15000 localhost 4002 25000 localhost 4004 10000 localhost 4001
+first three peers build static ring
+all the next one will be just joinning as ex two to join
+
+ip port id peer-ip peer-port
+localhost 4002 15000 localhost 4002
