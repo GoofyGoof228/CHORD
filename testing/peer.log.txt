@@ -1,6 +1,6 @@
-18:24:08: Starting new Peer 0
-18:24:08: Thread 0: is terminating
-18:24:08: Starting new Peer 1
-18:24:08: Thread 1: is terminating
-18:24:08: Starting new Peer 2
-18:24:08: Thread 2: is terminating
+11:46:57: Starting new Peer 0
+11:46:57: Starting new Peer 1
+11:46:57: Starting new Peer 2
+11:47:29: Thread 1: is terminating
+11:47:29: Thread 2: is terminating
+11:47:29: Thread 0: is terminating

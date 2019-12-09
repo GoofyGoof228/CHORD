@@ -28,10 +28,12 @@ message* create_wrapper(void* m, const int type){
     if(type == EXTERNAL_MES){
         new_m->ext_msg = (external_message*) m;
         new_m->int_msg = NULL;
+        new_m->internal = false;
     }
     if(type == INTERNAL_MES){
         new_m->int_msg = (internal_message*) m;
         new_m->ext_msg = NULL;
+        new_m->internal = true;
     }
     return new_m;
 }

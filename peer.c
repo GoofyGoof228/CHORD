@@ -70,6 +70,8 @@ int main(int argc, char* argv[]){
     }
 
     struct timeval tv;
+    // WARNING!
+    //tv.tv_sec = 30;
     tv.tv_sec = 2;
     tv.tv_usec = 0;
     bool running = true;

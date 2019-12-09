@@ -203,32 +203,39 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
 
             message *state = pop_saved_state(self->states, m_in->hash_id, INTERNAL_MES);
 
-            if(state->int_msg->type == LOOKUP){
-                //TODO finish FT
-                recieve_reply_ft(state->int_msg, self);
-                free_message(state);
-                close(socket);
-                FD_CLR(socket, master);
-                return 0;
-            }
-
-            external_message* to_send = state->ext_msg;
-            if (to_send == NULL) {
-                fprintf(stderr, "Error : trying to send NULL external message\n");
-                return -1;
-            }
             close(socket);
             FD_CLR(socket, master);
-            int peer_sock = connect_to_peer(m_in->node_ip, m_in->node_port);
-            send_external_message(to_send, peer_sock);
-            FD_SET(peer_sock, master);
 
-            // Save the client socket
-            payload *p = ints_to_payload(peer_socket, to_send->socket_recieved_from);
-            h_set_p(self->response_sockets_head, p);
-            free_message(state);
-            free_payload(p);
+            if(state == NULL){
+                fprintf(stderr, "No Saved Message to match REPLY with Hash ID: %u", m_in->hash_id);
+                return -1;
+            }
 
+            if(state->internal){
+                if(state->int_msg->type == LOOKUP){
+                    //TODO finish FT
+                    recieve_reply_ft(state->int_msg, self);
+                    free_message(state);
+                    return 0;
+                }
+            }
+            else {
+                external_message* to_send = state->ext_msg;
+                if (to_send == NULL) {
+                    fprintf(stderr, "Error : trying to send NULL external message\n");
+                    return -1;
+                }
+
+                int peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
+                send_external_message(to_send, peer_socket);
+                FD_SET(peer_socket, master);
+
+                // Save the client socket
+                payload *p = ints_to_payload(peer_socket, to_send->socket_recieved_from);
+                h_set_p(self->response_sockets_head, p);
+                free_message(state);
+                free_payload(p);
+            }
             break;
         }
         case STABILIZE: {
