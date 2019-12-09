@@ -44,9 +44,9 @@ int main(int argc, char* argv[]){
         exit(EXIT_FAILURE);
     }
 
-    struct timeval tv;
-    tv.tv_sec = 2;
-    tv.tv_usec = 0;
+    struct timeval time_out;
+    time_out.tv_sec = 2;
+    time_out.tv_usec = 0;
     bool running = true;
 
     fd_set connections_storage;
@@ -110,7 +110,6 @@ int main(int argc, char* argv[]){
                 close(peer_sock);
                 stab_count = 0;
             }
-            gettimeofday(&now, 0);
             continue;
         }
         SOCKET i;

@@ -4,6 +4,7 @@ import random
 import threading
 import numpy as np
 import time
+import os, sys
 
 format = "%(asctime)s: %(message)s"
 logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S",filename='peer.log.txt',filemode='w')
@@ -26,6 +27,11 @@ peer_lst = [[ip,startport]]
 
 def thread_function(cmd,threadnumber):
 	logging.info("Starting new Peer "+ threadnumber)
+
+	file_name = 'peer_' + str(threadnumber) + '_stdou.log'
+	log_out = open(file_name, 'w+')
+	fd_log = os.fd
+
 	process = subprocess.Popen(cmd, stdout=subprocess.PIPE,stderr=subprocess.PIPE,universal_newlines=True)
     	#print(process.communicate())
 	while True:
