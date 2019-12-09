@@ -218,8 +218,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                     free_message(state);
                     return 0;
                 }
-            }
-            else {
+            }else {
                 external_message* to_send = state->ext_msg;
                 if (to_send == NULL) {
                     fprintf(stderr, "Error : trying to send NULL external message\n");

@@ -45,6 +45,10 @@ int main(int argc, char* argv[]){
         self_info.next_ip = get_ipv4_addr(argv[5]);
         self_info.next_port = atoi(argv[9]);
 
+        //here it was, hopefully
+        self_info.initialised_next = true;
+        self_info.initialised_previous = true;
+
         self_info.ft = NULL;
     }else{
         printf("started joining peer\n");
@@ -69,11 +73,13 @@ int main(int argc, char* argv[]){
         exit(EXIT_FAILURE);
     }
 
-    struct timeval tv;
+    struct timeval now;
+    gettimeofday(&now, 0);
+
+    struct timeval time_out;
+    time_out.tv_sec = 2;
+    time_out.tv_usec = 0;
     // WARNING!
-    //tv.tv_sec = 30;
-    tv.tv_sec = 2;
-    tv.tv_usec = 0;
     bool running = true;
 
     fd_set connections_storage;
@@ -114,7 +120,7 @@ int main(int argc, char* argv[]){
         // copy FD set
         fd_set in_fd = connections_storage;
         // value 0 = wait until a socket is ready to get read from
-        int rv = select(max_socket+1, &in_fd, NULL, NULL, &tv);
+        int rv = select(max_socket+1, &in_fd, NULL, NULL, &time_out);
 
         if (rv == -1) {
             // select modifies the input set
@@ -135,6 +141,7 @@ int main(int argc, char* argv[]){
                 close(peer_sock);
 
             }
+            gettimeofday(&now, 0);
             continue;
         }
         SOCKET i;

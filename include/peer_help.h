@@ -62,4 +62,5 @@ message* pop_saved_state(list* states, uint16_t hash_id, const int type);
 
 bool is_between(uint16_t hash, uint16_t prev, uint16_t now);
 
+bool time_out(struct timeval *start);
 #endif //BLOCK4_PEER_HELP_H
