@@ -12,7 +12,7 @@ terminal_invocation = 'gnome-terminal -x'
 abs_build_folder = 'cmake-build-debug'
 ip = '127.0.0.1'
 
-peercount = 3
+peercount = 50
 startport = 4000
 portrange = np.linspace(startport,startport+peercount-1,peercount)
 

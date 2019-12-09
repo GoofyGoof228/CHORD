@@ -11,9 +11,7 @@
 #include "peer_help.h"
 #include "finger_table.h"
 #include <netdb.h>
-#ifndef TEST
-#define TEST
-#endif
+
 
 uint32_t get_ipv4_addr(char *name){
     int status;
@@ -203,8 +201,6 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
 
             message *state = pop_saved_state(self->states, m_in->hash_id, INTERNAL_MES);
 
-            close(socket);
-            FD_CLR(socket, master);
 
             if(state == NULL){
                 fprintf(stderr, "No Saved Message to match REPLY with Hash ID: %u", m_in->hash_id);
@@ -225,7 +221,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                     return -1;
                 }
 
-                int peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
+                peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
                 send_external_message(to_send, peer_socket);
                 FD_SET(peer_socket, master);
 
@@ -244,8 +240,9 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                 self->previous_ip = m_in->node_ip;
                 self->previous_port = m_in->node_port;
                 self->initialised_previous = true;
-            }else if(m_in->node_id != self->previous_id){
-                    //TODO send notify
+            }
+            else if(m_in->node_id != self->previous_id) {
+                //TODO send notify
                 internal_message * out = new_internal_message(NOTIFY, 0, self->previous_id, self->previous_ip, self->previous_port);
                 peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
                 if(send_internal_message(out, peer_socket) == -1) {
@@ -253,37 +250,47 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                     return -1;
                 }
                 close(peer_socket);
-                }else{
+            }
+            else {
                     //everything ok
-                }
+            }
             break;
 
         }
         case NOTIFY: {
-#ifdef TEST
-            printf("before NOTIFY\n");
-            print_peer_info_long(self);
-#endif
+
             if(self->initialised_next) {
                 // Check if I am Previous Node
                 if(self->self_id != m_in->node_id) {
+                    #ifdef TEST
+                        printf("before NOTIFY\n");
+                        print_peer_info_long(self);
+                    #endif
                     self->next_id = m_in->node_id;
                     self->next_ip = m_in->node_ip;
                     self->next_port = m_in->node_port;
+                    #ifdef TEST
+                        printf("after NOTIFY\n");
+                        print_peer_info_long(self);
+                    #endif
                 }
             }
             // Joining in progress:
             else{
                 // Set Successor
+                #ifdef TEST
+                    printf("before NOTIFY\n");
+                    print_peer_info_long(self);
+                #endif
                 self->next_id = m_in->node_id;
                 self->next_ip = m_in->node_ip;
                 self->next_port = m_in->node_port;
                 self->initialised_next = true;
+                #ifdef TEST
+                    printf("after NOTIFY\n");
+                    print_peer_info_long(self);
+                #endif
             }
-#ifdef TEST
-            printf("after NOTIFY\n");
-            print_peer_info_long(self);
-#endif
             break;
         }
         case JOIN: {
@@ -303,7 +310,6 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                 self->previous_ip = m_in->node_ip;
                 self->previous_port = m_in->node_port;
                 self->initialised_previous = true;
-
                 if(!self->initialised_next){
                     self->next_id = m_in->node_id;
                     self->next_ip = m_in->node_ip;

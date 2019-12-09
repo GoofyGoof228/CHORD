@@ -24,7 +24,6 @@ struct _peer_info{
     uint32_t self_ip;
     uint16_t self_port;
 
-
     bool initialised_previous;
     uint16_t previous_id;
     uint32_t previous_ip;
