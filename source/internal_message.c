@@ -146,8 +146,11 @@ int decode_internal_header (uint8_t *buf, internal_message *m) {
 
 int send_internal_message(internal_message *m, int sock){
 #ifdef TEST
-    printf("sending\n");
-    print_internal_message(m);
+    if(m->type != STABILIZE){
+        printf("sending\n");
+        print_internal_message(m);
+    }
+
 #endif
     uint8_t *buf = calloc(INTERNAL_HEADER_LEN, sizeof(uint8_t));
 

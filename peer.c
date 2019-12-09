@@ -29,40 +29,9 @@ int main(int argc, char* argv[]){
     self_info.hash_head = &hash;
     self_info.response_sockets_head = &response_socket_head;
     self_info.states = listCreate();
-#ifdef TEST
-    if(argc == 10){
-        static_peer = true;
-        printf("started static peer\n");
-        self_info.self_id = atoi(argv[1]);
-        self_info.self_ip = get_ipv4_addr(argv[2]);
-        self_info.self_port = atoi(argv[3]);
-
-        self_info.previous_id = atoi(argv[4]);
-        self_info.previous_ip = get_ipv4_addr(argv[5]);
-        self_info.previous_port = atoi(argv[6]);
-
-        self_info.next_id = atoi(argv[7]);
-        self_info.next_ip = get_ipv4_addr(argv[5]);
-        self_info.next_port = atoi(argv[9]);
-
-        //here it was, hopefully
-        self_info.initialised_next = true;
-        self_info.initialised_previous = true;
-
-        self_info.ft = NULL;
-    }else{
-        printf("started joining peer\n");
-        if(setup_peer_info(&self_info, argv, argc) == -1) {
-            exit(EXIT_FAILURE);
-        }
-    }
-    print_peer_info_long(&self_info);
-#endif
-#ifndef TEST
     if(setup_peer_info(&self_info, argv, argc) == -1) {
             exit(EXIT_FAILURE);
         }
-#endif
     // setup connection
     char *ip_string;
     if(static_peer)ip_string = argv[2];
@@ -93,7 +62,6 @@ int main(int argc, char* argv[]){
         max_socket = STDIN_FILENO;
     }
     //TODO Start Join Process, only if peer wasn`t started as static (no neighbours are known)
-    if(!static_peer) {
         if (!self_info.first_peer) {
             // Send Join
             internal_message *join_msg = new_internal_message(JOIN, 0, self_info.self_id, self_info.self_ip,
@@ -115,7 +83,6 @@ int main(int argc, char* argv[]){
             }
             close(peer_sock);
         }
-    }
     while(running) {
         // copy FD set
         fd_set in_fd = connections_storage;
@@ -135,7 +102,7 @@ int main(int argc, char* argv[]){
                 internal_message *stabalize = new_internal_message(STABILIZE, 0, self_info.self_id, self_info.self_ip, self_info.self_port);
                 int peer_sock = connect_to_peer(self_info.next_ip, self_info.next_port);
                 if(send_internal_message(stabalize, peer_sock) == -1) {
-                    fprintf(stderr, " Sending Stabalize\n");
+                    //fprintf(stderr, " Sending Stabalize\n");
                     exit(EXIT_FAILURE);
                 }
                 close(peer_sock);
@@ -219,8 +186,12 @@ int main(int argc, char* argv[]){
                         continue;
                     }
                     #ifdef TEST
-                    printf("recieved: \n");
-                    print_message(m_in);
+                    if(m_in->int_msg != NULL){
+                        if(m_in->int_msg->type != STABILIZE){
+                            printf("recieved: \n");
+                            print_message(m_in);
+                        }
+                    }
                     fflush(stdout);
                     fflush(stdin);
                     #endif
