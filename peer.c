@@ -19,6 +19,7 @@
 #endif
 //#define STATIC_RING
 
+//TODO use AF_INET, do not use localhost, use 127.0.0.0 !!!!. otherweise it crashes, no fucking idea why. It makes no sence, but...
 
 int main(int argc, char* argv[]){
     bool static_peer = false;
@@ -146,37 +147,7 @@ int main(int argc, char* argv[]){
 
                         printf("\nNew connection from %d:%s at socket: %d\n", client_port, ipstr, client_sock);
                     #endif
-                }
-                else if(i == STDIN_FILENO){
-                    // Shutdown
-                    #ifdef TEST
-                    char *command = calloc(COMMAND_LEN, sizeof(char));
-                    fscanf(stdin, "%s", command);
-                    fflush(stdin);
-                    if(strcmp(command, "ft") == 0){
-                        //TODO force to build ft
-                        printf("build a finger table !\n");
-                        create_ft(&self_info, -1);
-                        init_fill_ft(&self_info);
-                    }
-                    if(strcmp(command, "ft_p") == 0){
-                        //print FT in file
-                        print_ft_in_file((finger_table*) self_info.ft);
-                    }
-                    if(strcmp(command, "stop") == 0){
-                        running = false;
-                        //break;
-
-                    }
-                    if(strcmp(command, "info") == 0){
-                        print_peer_info_long(&self_info);
-                    }
-                    //i = max_socket + 1;
-                    free(command);
-                    continue;
-                    #endif
-                }
-                else {
+                }else if(i != STDIN_FILENO){
                     message* m_in = malloc(sizeof(message));
                     // Receive and Decode Message
                     if(recv_message(m_in, i) == -1) {
@@ -197,6 +168,40 @@ int main(int argc, char* argv[]){
                     react_on_incoming_message(m_in, &self_info, i, &connections_storage);
                     //message is being freed in reac_on bla bla
                     //free_message(m_in);
+                }else{
+                    // Shutdown
+#ifdef TEST
+                    char *command = calloc(COMMAND_LEN, sizeof(char));
+                    fscanf(stdin, "%s", command);
+                    fflush(stdin);
+                    if(strcmp(command, "ft") == 0){
+                        //TODO force to build ft
+                        printf("build a finger table !\n");
+                        create_ft(&self_info, -1);
+                        init_fill_ft(&self_info);
+                    }
+                    if(strcmp(command, "ft_l") == 0){
+                        //print FT in file
+                        print_ft_in_file((finger_table*) self_info.ft);
+                    }
+                    if(strcmp(command, "ft_p") == 0){
+                        print_ft((finger_table*) self_info.ft);
+                    }
+                    if(strcmp(command, "stop") == 0){
+                        running = false;
+                        //break;
+
+                    }
+                    if(strcmp(command, "info_l") == 0){
+                        print_peer_info_long(&self_info);
+                    }
+                    if(strcmp(command, "info_s") == 0){
+                        print_peer_info_short(&self_info);
+                    }
+                    //i = max_socket + 1;
+                    free(command);
+                    continue;
+#endif
                 }
             }
         }

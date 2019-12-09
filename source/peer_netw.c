@@ -49,9 +49,9 @@ int setup_listen_socket(uint16_t port_number, char * ip_str){
      * when set to AF_INET doest recieve connections from localhost
      * but ew why ????
      * */
-    hints.ai_family = AF_UNSPEC;
+    hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
-    //hints.ai_flags = AI_PASSIVE;
+    hints.ai_flags = AI_PASSIVE;
 
     if (getaddrinfo(ip_str, port, &hints, &result) != 0) {
         fprintf(stderr, "Server: getaddrinfo error : \n");
