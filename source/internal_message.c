@@ -8,9 +8,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include "internal_message.h"
-#ifndef TEST
-#define TEST
-#endif
+
 int encode_internal_message (uint8_t *buf, internal_message *m) {
 
     // encode action
