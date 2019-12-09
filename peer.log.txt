@@ -1,3 +1,0 @@
-10:50:32: Starting new Peer 0
-10:50:32: Starting new Peer 1
-10:50:33: Starting new Peer 2
