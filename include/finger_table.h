@@ -52,4 +52,5 @@ void free_ft(finger_table* ft);
 
 void print_ft(finger_table* ft);
 
+void print_ft_in_file(finger_table* ft);
 #endif //BLOCK5_FINGER_TABLE_H

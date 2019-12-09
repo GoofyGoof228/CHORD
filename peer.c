@@ -131,7 +131,7 @@ int main(int argc, char* argv[]){
                     if (client_sock > max_socket) {
                         max_socket = client_sock;
                     }
-                    #ifdef TEST
+                    #ifdef TEST1
                         socklen_t len;
                         struct sockaddr_storage addr;
                         char ipstr[INET_ADDRSTRLEN];
@@ -159,10 +159,9 @@ int main(int argc, char* argv[]){
                         create_ft(&self_info, -1);
                         init_fill_ft(&self_info);
                     }
-                    if(strcmp(command, "ft_print") == 0){
-                        finger_table* FT = self_info.ft;
-                        printf("Finger table !\n");
-                        print_ft((finger_table*) self_info.ft);
+                    if(strcmp(command, "ft_p") == 0){
+                        //print FT in file
+                        print_ft_in_file((finger_table*) self_info.ft);
                     }
                     if(strcmp(command, "stop") == 0){
                         running = false;

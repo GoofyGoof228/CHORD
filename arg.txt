@@ -1,39 +1,15 @@
-./peer (self) id ip port (previous) id ip port (next) id ip port
-
-  1 localhost 1500      301 localhost 1503      101 localhost 1501
-101 localhost 1501        1 localhost 1500      201 localhost 1502
-201 localhost 1502      101 localhost 1501      301 localhost 1503
-301 localhost 1503      201 localhost 1502        1 localhost 1500
-
-
-add later to cmake set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/build")
-
-10000 127.0.0.1 4001 50000 127.0.0.1 4009 15000 127.0.0.1 4002
-15000 127.0.0.1 4002 10000 127.0.0.1 4001 20000 127.0.0.1 4003
-20000 127.0.0.1 4003 15000 127.0.0.1 4002 25000 127.0.0.1 4004
-25000 127.0.0.1 4004 20000 127.0.0.1 4003 30000 127.0.0.1 4005
-30000 127.0.0.1 4005 25000 127.0.0.1 4004 35000 127.0.0.1 4006
-35000 127.0.0.1 4006 30000 127.0.0.1 4005 40000 127.0.0.1 4007
-40000 127.0.0.1 4007 35000 127.0.0.1 4006 45000 127.0.0.1 4008
-45000 127.0.0.1 4008 40000 127.0.0.1 4007 50000 127.0.0.1 4009
-50000 127.0.0.1 4009 45000 127.0.0.1 4008 10000 127.0.0.1 4001
-
-10000 localhost 4001 50000 localhost 4009 15000 localhost 4002
-15000 localhost 4002 10000 localhost 4001 20000 localhost 4003
-20000 localhost 4003 15000 localhost 4002 25000 localhost 4004
-25000 localhost 4004 20000 localhost 4003 30000 localhost 4005
-30000 localhost 4005 25000 localhost 4004 35000 localhost 4006
-35000 localhost 4006 30000 localhost 4005 40000 localhost 4007
-40000 localhost 4007 35000 localhost 4006 45000 localhost 4008
-45000 localhost 4008 40000 localhost 4007 50000 localhost 4009
-50000 localhost 4009 45000 localhost 4008 10000 localhost 4001
+localhost 4000
+localhost 4001 10000    localhost 4000
+localhost 4002 15000    localhost 4000
+localhost 4003 20000    localhost 4000
+localhost 4004 25000    localhost 4000
+localhost 4005 30000    localhost 4000
+localhost 4006 35000    localhost 4000
+localhost 4007 40000    localhost 4000
+localhost 4008 45000    localhost 4000
+localhost 4009 50000    localhost 4000
+localhost 4010 55000    localhost 4000
 
 
-10000 localhost 4001 40000 localhost 4007 25000 localhost 4004
-25000 localhost 4004 10000 localhost 4001 40000 localhost 4007
-40000 15000 localhost 4002 25000 localhost 4004 10000 localhost 4001
-first three peers build static ring
-all the next one will be just joinning as ex two to join
 
-ip port id peer-ip peer-port
-localhost 4002 15000 localhost 4002
+

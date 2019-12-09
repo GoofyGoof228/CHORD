@@ -10,10 +10,10 @@
 #import <sys/socket.h>
 #include <unistd.h>
 #include "list.h"
+#include <string.h>
 #define NUM_BITS_IN_HASH 16
-#ifndef TEST
 #define TEST
-#endif
+
 
 uint32_t powi(uint16_t base, uint16_t exp){
     if(exp == 0) return 1;
@@ -139,4 +139,21 @@ void print_ft(finger_table* ft){
         printf("%d    %d    ", i, ft->start_ids[i]);
         ft->entries[i] == NULL ? printf("NULL\n") : printf("%d\n", ft->entries[i]->id);
     }
+}
+
+void print_ft_in_file(finger_table *ft){
+    if(!ft->filled)return;
+    char file_name[30];
+    snprintf(file_name, 30, "finger_table_id=%d.log", ft->n);
+    FILE* table_log = fopen(file_name, (const char *) 'w');
+    if(table_log == NULL){
+        fprintf (stderr, "Couldn't open file %s\n", file_name);
+        return;
+        //exit(EXIT_FAILURE);
+    }
+    fprintf(table_log, "Finger table of : \n %d", ft->n);
+    for(int i = 0; i != ft->m; i++){
+        fprintf(table_log, "i : %d\t\tstart[i]-id : %d\t\tft[i]-id : %d\n", i, ft->start_ids[i], ft->entries[i]->id);
+    }
+
 }
