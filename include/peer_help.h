@@ -46,6 +46,8 @@ struct _peer_info{
 };
 typedef struct _peer_info peer_info;
 
+bool join_is_done(peer_info* self);
+
 int setup_peer_info(peer_info * self, char *argv[], int argc);
 
 void print_addr_info(uint16_t id, uint32_t ip, uint32_t port);

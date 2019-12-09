@@ -92,7 +92,7 @@ int setup_listen_socket(uint16_t port_number, char * ip_str){
 int connect_to_peer(uint32_t ip, uint16_t port){
     struct addrinfo client_addr;
     memset(&client_addr, 0, sizeof(client_addr));
-    client_addr.ai_family = AF_UNSPEC;
+    client_addr.ai_family = AF_INET;
     client_addr.ai_socktype = SOCK_STREAM;
     client_addr.ai_flags = AI_PASSIVE; // ToDO Do we need ai_flags?
     struct addrinfo *server_adrr;
@@ -121,6 +121,7 @@ int connect_to_peer(uint32_t ip, uint16_t port){
         if(connect(sock, server_adrr->ai_addr, server_adrr->ai_addrlen) == -1){
             close(sock);
             perror("connect_to_peer : connect\n");
+            sock = EXIT_FAILURE;
             continue;
         }
         break;
@@ -203,7 +204,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
             message *state = pop_saved_state(self->states, m_in->hash_id, INTERNAL_MES);
 
             if(state->int_msg->type == LOOKUP){
-                //ft
+                //TODO finish FT
                 recieve_reply_ft(state->int_msg, self);
                 free_message(state);
                 close(socket);
@@ -237,19 +238,26 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                 self->previous_ip = m_in->node_ip;
                 self->previous_port = m_in->node_port;
                 self->initialised_previous = true;
-            }
-            // Send Notify
-            internal_message * out = new_internal_message(NOTIFY, 0, self->previous_id, self->previous_ip, self->previous_port);
-            peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
-            if(send_internal_message(out, peer_socket) == -1) {
-                fprintf(stderr, " Sending Notify after Stabalize\n");
-                return -1;
-            }
-            close(peer_socket);
-
+            }else if(m_in->node_id != self->previous_id){
+                    //TODO send notify
+                internal_message * out = new_internal_message(NOTIFY, 0, self->previous_id, self->previous_ip, self->previous_port);
+                peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
+                if(send_internal_message(out, peer_socket) == -1) {
+                    fprintf(stderr, " Sending Notify after Stabalize\n");
+                    return -1;
+                }
+                close(peer_socket);
+                }else{
+                    //everything ok
+                }
             break;
+
         }
         case NOTIFY: {
+#ifdef TEST
+            printf("before NOTIFY\n");
+            print_peer_info_long(self);
+#endif
             if(self->initialised_next) {
                 // Check if I am Previous Node
                 if(self->self_id != m_in->node_id) {
@@ -259,14 +267,17 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                 }
             }
             // Joining in progress:
-            else {
+            else{
                 // Set Successor
                 self->next_id = m_in->node_id;
                 self->next_ip = m_in->node_ip;
                 self->next_port = m_in->node_port;
                 self->initialised_next = true;
             }
-
+#ifdef TEST
+            printf("after NOTIFY\n");
+            print_peer_info_long(self);
+#endif
             break;
         }
         case JOIN: {
@@ -307,7 +318,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
         }
         case F_ACK: {
             fprintf(stderr, "F_Ack: Not implemented\n");
-            //TODO receive ack, delete saved state ??
+            //TO DO receive ack, delete saved state ??
             return -1;
             break;
 
@@ -315,7 +326,6 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
         case FINGER: {
             create_ft(self, socket);
             init_fill_ft(self);
-            return -1;
             break;
 
         }

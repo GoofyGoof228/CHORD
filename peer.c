@@ -7,6 +7,7 @@
 #include "peer_help.h"
 #include <arpa/inet.h>
 #include <errno.h>
+#include <ctype.h>
 #include "finger_table.h"
 #define TEST
 #define COMMAND_LEN 15
@@ -16,10 +17,11 @@
 #ifdef TEST
 #include <string.h>
 #endif
+//#define STATIC_RING
 
 
-#define STATIC_RING
 int main(int argc, char* argv[]){
+    bool static_peer = false;
     // Setup Peer Info
     peer_info self_info;
     payload * hash = NULL;
@@ -27,32 +29,41 @@ int main(int argc, char* argv[]){
     self_info.hash_head = &hash;
     self_info.response_sockets_head = &response_socket_head;
     self_info.states = listCreate();
-#ifndef STATIC_RING
-    if(setup_peer_info(&self_info, argv, argc) == -1) {
-        exit(EXIT_FAILURE);
+#ifdef TEST
+    if(argc == 10){
+        static_peer = true;
+        printf("started static peer\n");
+        self_info.self_id = atoi(argv[1]);
+        self_info.self_ip = get_ipv4_addr(argv[2]);
+        self_info.self_port = atoi(argv[3]);
+
+        self_info.previous_id = atoi(argv[4]);
+        self_info.previous_ip = get_ipv4_addr(argv[5]);
+        self_info.previous_port = atoi(argv[6]);
+
+        self_info.next_id = atoi(argv[7]);
+        self_info.next_ip = get_ipv4_addr(argv[5]);
+        self_info.next_port = atoi(argv[9]);
+
+        self_info.ft = NULL;
+    }else{
+        printf("started joining peer\n");
+        if(setup_peer_info(&self_info, argv, argc) == -1) {
+            exit(EXIT_FAILURE);
+        }
     }
+    print_peer_info_long(&self_info);
 #endif
-#ifdef STATIC_RING
-    self_info.self_id = atoi(argv[1]);
-    self_info.self_ip = get_ipv4_addr(argv[2]);
-    self_info.self_port = atoi(argv[3]);
-
-    self_info.previous_id = atoi(argv[4]);
-    self_info.previous_ip = get_ipv4_addr(argv[5]);
-    self_info.previous_port = atoi(argv[6]);
-
-    self_info.next_id = atoi(argv[7]);
-    self_info.next_ip = get_ipv4_addr(argv[5]);
-    self_info.next_port = atoi(argv[9]);
-
-    self_info.ft = NULL;
+#ifndef TEST
+    if(setup_peer_info(&self_info, argv, argc) == -1) {
+            exit(EXIT_FAILURE);
+        }
 #endif
-    #ifdef TEST
-        printf("started peer :\n");
-        print_peer_info_long(&self_info);
-    #endif
     // setup connection
-    SOCKET listen_sock = setup_listen_socket(self_info.self_port, argv[2]);
+    char *ip_string;
+    if(static_peer)ip_string = argv[2];
+    else ip_string = argv[1];
+    SOCKET listen_sock = setup_listen_socket(self_info.self_port, ip_string);
     if(listen_sock == -1) {
         fprintf(stderr, " - setup_listen_socket\n");
         exit(EXIT_FAILURE);
@@ -73,23 +84,30 @@ int main(int argc, char* argv[]){
     if(STDIN_FILENO > max_socket){
         max_socket = STDIN_FILENO;
     }
+    //TODO Start Join Process, only if peer wasn`t started as static (no neighbours are known)
+    if(!static_peer) {
+        if (!self_info.first_peer) {
+            // Send Join
+            internal_message *join_msg = new_internal_message(JOIN, 0, self_info.self_id, self_info.self_ip,
+                                                              self_info.self_port);
     #ifdef TEST
-        printf("\ncommand : \n");
-        fflush(stdout);
+        char addrr[20];
+        struct in_addr inAddr;
+        inAddr.s_addr = self_info.join_ip;
+        inet_ntop(AF_INET, &inAddr, addrr, INET_ADDRSTRLEN);
+            printf("trying to connect to : ip - %s, port - %d\n", addrr, self_info.join_port);
     #endif
-    #ifndef STATIC_RING
-    // Start Join Process
-    if(!self_info.first_peer) {
-        // Send Join
-        internal_message *join_msg = new_internal_message(JOIN, 0, self_info.self_id, self_info.self_ip, self_info.self_port);
-        int peer_sock = connect_to_peer(self_info.join_ip, self_info.join_port);
-        if(send_internal_message(join_msg, peer_sock) == -1) {
-            fprintf(stderr, " Sending Join to Entry Node\n");
-            exit(EXIT_FAILURE);
+            int peer_sock = connect_to_peer(self_info.join_ip, self_info.join_port);
+            if(peer_sock == EXIT_FAILURE){
+                exit(EXIT_FAILURE);
+            }
+            if (send_internal_message(join_msg, peer_sock) == -1) {
+                fprintf(stderr, " Sending Join to Entry Node\n");
+                exit(EXIT_FAILURE);
+            }
+            close(peer_sock);
         }
-        close(peer_sock);
     }
-    #endif
     while(running) {
         // copy FD set
         fd_set in_fd = connections_storage;
@@ -102,10 +120,9 @@ int main(int argc, char* argv[]){
             perror("\n");
             exit(EXIT_FAILURE);
         }
-        // Timout:
-#ifndef STATIC_RING
+        // Timeout:
         if (rv == 0) {
-            if (self_info.initialised_next){
+            if (join_is_done(&self_info)){
                 // Send Stabalize
                 internal_message *stabalize = new_internal_message(STABILIZE, 0, self_info.self_id, self_info.self_ip, self_info.self_port);
                 int peer_sock = connect_to_peer(self_info.next_ip, self_info.next_port);
@@ -118,7 +135,6 @@ int main(int argc, char* argv[]){
             }
             continue;
         }
-#endif
         SOCKET i;
         for(i = 0; i <= max_socket; ++i) {
             // FD_ISSET is true if a socket was flagged as ready from select
@@ -177,11 +193,8 @@ int main(int argc, char* argv[]){
                         //break;
 
                     }
-                    if(strcmp(command, "powi") == 0){
-                        uint16_t x = 2;
-                        uint16_t e = 10;
-                        printf("%d to power of %d = %d", x, e, powi(x, e));
-
+                    if(strcmp(command, "info") == 0){
+                        print_peer_info_long(&self_info);
                     }
                     //i = max_socket + 1;
                     free(command);
