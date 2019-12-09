@@ -10,10 +10,10 @@
 #import <sys/socket.h>
 #include <unistd.h>
 #include "list.h"
+#include <string.h>
 #define NUM_BITS_IN_HASH 16
-#ifndef TEST
 #define TEST
-#endif
+
 
 uint32_t powi(uint16_t base, uint16_t exp){
     if(exp == 0) return 1;
@@ -61,10 +61,12 @@ void init_fill_ft(peer_info* self){
         ft->start_ids[i] = start;
         if(is_between(ft->start_ids[i], self->previous_id, self->self_id)){
             ft->entries[i] = create_entry(self->self_id, self->self_ip, self->self_port);
+            if(ft_is_done(ft))return;
             continue;
         }
         if(is_between(ft->start_ids[i], self->self_id, self->next_id)){
             ft->entries[i] = create_entry(self->next_id, self->next_ip, self->next_port);
+            if(ft_is_done(ft))return;
             continue;
         }
         search_for_successor(start, self);
@@ -86,9 +88,8 @@ void recieve_reply_ft(internal_message* lp, peer_info* self){
     int index = find_index(lp->hash_id, (finger_table*) self->ft);
     finger_table *ft = self->ft;
     ft->entries[index] = create_entry(lp->node_id, lp->node_ip, lp->node_port);
-    if(ft_is_done(ft)){
+    if(ft_is_done(ft) && ((finger_table*)self->ft)->socket_asked_to_dew_it != -1){
         //case for commando-line
-        if(((finger_table*)self->ft)->socket_asked_to_dew_it == -1)return;
         //TODO send ack
         internal_message out;
         out.hash_id = ((finger_table*)self->ft)->n;
@@ -139,4 +140,25 @@ void print_ft(finger_table* ft){
         printf("%d    %d    ", i, ft->start_ids[i]);
         ft->entries[i] == NULL ? printf("NULL\n") : printf("%d\n", ft->entries[i]->id);
     }
+}
+
+void print_ft_in_file(finger_table *ft){
+    if(!ft->filled){
+        fprintf(stderr, "FT is not filled\n");
+        return;
+    }
+    char file_name[30];
+    snprintf(file_name, 30, "../finger_table_id=%d.log", ft->n);
+    FILE* table_log = fopen(file_name, (const char *) "w+");
+    if(table_log == NULL){
+        fprintf (stderr, "Couldn't open file %s\n", file_name);
+        return;
+        //exit(EXIT_FAILURE);
+    }
+    fprintf(table_log, "Finger table of :  %d\n", ft->n);
+    for(int i = 0; i != ft->m; i++){
+        fprintf(table_log, "i : %d\t\tstart[i]-id : %d\t\tft[i]-id : %d\n", i, ft->start_ids[i], ft->entries[i]->id);
+    }
+    printf("Logged FT succesfully\n");
+    fclose(table_log);
 }

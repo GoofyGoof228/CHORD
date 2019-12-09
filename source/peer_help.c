@@ -6,6 +6,7 @@
 #include "peer_netw.h"
 #include <stdio.h>
 #include <arpa/inet.h>
+#include <sys/time.h>
 #ifndef TEST
 #define TEST
 #endif
@@ -174,4 +175,16 @@ void print_peer_info_long(peer_info* self){
     printf("number of saved states : %d\n", listGetSize(self->states));
     fflush(stdout);
 
+}
+
+bool time_out(struct timeval *start){
+    struct timeval now;
+    gettimeofday(&now, 0);
+    uint32_t elapsed = now.tv_sec - start->tv_sec;
+#ifdef TEST1
+    return elapsed >= 10;
+#endif
+#ifndef TEST1
+    return elapsed >= 2;
+#endif
 }

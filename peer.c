@@ -19,6 +19,7 @@
 #endif
 //#define STATIC_RING
 
+//TODO use AF_INET, do not use localhost, use 127.0.0.0 !!!!. otherweise it crashes, no fucking idea why. It makes no sence, but...
 
 int main(int argc, char* argv[]){
     // Setup Peer Info
@@ -86,7 +87,7 @@ int main(int argc, char* argv[]){
         // copy FD set
         fd_set in_fd = connections_storage;
         // value 0 = wait until a socket is ready to get read from
-        int rv = select(max_socket+1, &in_fd, NULL, NULL, &tv);
+        int rv = select(max_socket+1, &in_fd, NULL, NULL, &time_out);
 
         stab_count ++;
 
@@ -103,12 +104,13 @@ int main(int argc, char* argv[]){
                 internal_message *stabalize = new_internal_message(STABILIZE, 0, self_info.self_id, self_info.self_ip, self_info.self_port);
                 int peer_sock = connect_to_peer(self_info.next_ip, self_info.next_port);
                 if(send_internal_message(stabalize, peer_sock) == -1) {
-                    fprintf(stderr, " Sending Stabalize\n");
+                    //fprintf(stderr, " Sending Stabalize\n");
                     exit(EXIT_FAILURE);
                 }
                 close(peer_sock);
                 stab_count = 0;
             }
+            gettimeofday(&now, 0);
             continue;
         }
         SOCKET i;
@@ -131,7 +133,7 @@ int main(int argc, char* argv[]){
                     if (client_sock > max_socket) {
                         max_socket = client_sock;
                     }
-                    #ifdef TEST
+                    #ifdef TEST1
                         socklen_t len;
                         struct sockaddr_storage addr;
                         char ipstr[INET_ADDRSTRLEN];
@@ -146,10 +148,30 @@ int main(int argc, char* argv[]){
 
                         printf("\nNew connection from %d:%s at socket: %d\n", client_port, ipstr, client_sock);
                     #endif
-                }
-                else if(i == STDIN_FILENO){
-                    // Shutdown
+                }else if(i != STDIN_FILENO){
+                    message* m_in = malloc(sizeof(message));
+                    // Receive and Decode Message
+                    if(recv_message(m_in, i) == -1) {
+                        FD_CLR(i, &connections_storage);
+                        close(i);
+                        continue;
+                    }
                     #ifdef TEST
+                    if(m_in->int_msg != NULL){
+                        if(m_in->int_msg->type != STABILIZE){
+                            printf("recieved: \n");
+                            print_message(m_in);
+                        }
+                    }
+                    fflush(stdout);
+                    fflush(stdin);
+                    #endif
+                    react_on_incoming_message(m_in, &self_info, i, &connections_storage);
+                    //message is being freed in reac_on bla bla
+                    //free_message(m_in);
+                }else{
+                    // Shutdown
+#ifdef TEST
                     char *command = calloc(COMMAND_LEN, sizeof(char));
                     fscanf(stdin, "%s", command);
                     fflush(stdin);
@@ -159,9 +181,11 @@ int main(int argc, char* argv[]){
                         create_ft(&self_info, -1);
                         init_fill_ft(&self_info);
                     }
-                    if(strcmp(command, "fp") == 0){
-                        finger_table* FT = self_info.ft;
-                        printf("Finger table !\n");
+                    if(strcmp(command, "ft_l") == 0){
+                        //print FT in file
+                        print_ft_in_file((finger_table*) self_info.ft);
+                    }
+                    if(strcmp(command, "ft_p") == 0){
                         print_ft((finger_table*) self_info.ft);
                     }
                     if(strcmp(command, "s") == 0){
@@ -169,31 +193,16 @@ int main(int argc, char* argv[]){
                         //break;
 
                     }
-                    if(strcmp(command, "i") == 0){
+                    if(strcmp(command, "info_l") == 0){
                         print_peer_info_long(&self_info);
+                    }
+                    if(strcmp(command, "info_s") == 0){
+                        print_peer_info_short(&self_info);
                     }
                     //i = max_socket + 1;
                     free(command);
                     continue;
-                    #endif
-                }
-                else {
-                    message* m_in = malloc(sizeof(message));
-                    // Receive and Decode Message
-                    if(recv_message(m_in, i) == -1) {
-                        FD_CLR(i, &connections_storage);
-                        close(i);
-                        continue;
-                    }
-                    #ifdef TEST
-                    printf("recieved: \n");
-                    print_message(m_in);
-                    fflush(stdout);
-                    fflush(stdin);
-                    #endif
-                    react_on_incoming_message(m_in, &self_info, i, &connections_storage);
-                    //message is being freed in reac_on bla bla
-                    //free_message(m_in);
+#endif
                 }
             }
         }
