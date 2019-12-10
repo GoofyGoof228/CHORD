@@ -147,7 +147,7 @@ void print_peer_info_long(peer_info* self){
 
     char buf[INET_ADDRSTRLEN];
     struct in_addr ip;
-    ip.s_addr = self->self_ip;
+    ip.s_addr = htonl(self->self_ip);
     inet_ntop(AF_INET, &ip, buf, INET_ADDRSTRLEN);
     printf("IP : %s\n", buf);
 
@@ -157,7 +157,7 @@ void print_peer_info_long(peer_info* self){
 
     char prev_buf[INET_ADDRSTRLEN];
     struct in_addr prev_ip;
-    prev_ip.s_addr = self->previous_ip;
+    prev_ip.s_addr = htonl(self->previous_ip);
     inet_ntop(AF_INET, &prev_ip, prev_buf, INET_ADDRSTRLEN);
     printf("prev IP : %s\n", prev_buf);
 
@@ -167,7 +167,8 @@ void print_peer_info_long(peer_info* self){
 
     char next_buf[INET_ADDRSTRLEN];
     struct in_addr next_ip;
-    next_ip.s_addr = self->next_ip;
+    next_ip.s_addr = htonl(self->next_ip);
+
     inet_ntop(AF_INET, &next_ip, next_buf, INET_ADDRSTRLEN);
     printf("next IP : %s\n", next_buf);
 

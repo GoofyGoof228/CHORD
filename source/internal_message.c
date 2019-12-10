@@ -215,8 +215,7 @@ void print_internal_message(internal_message* m){
     printf("node id : %d\n", m->node_id);
     char buf[INET_ADDRSTRLEN];
     struct in_addr ip;
-    ip.s_addr = m->node_ip;
-    inet_ntop(AF_INET, &ip, buf, INET_ADDRSTRLEN);
+    ip.s_addr = htonl(m->node_ip);    inet_ntop(AF_INET, &ip, buf, INET_ADDRSTRLEN);
     printf("node ip : %s\n", buf);
     printf("node port : %d\n", m->node_port);
     fflush(stdout);
@@ -227,7 +226,7 @@ void print_internal_message(internal_message* m){
 char * internal_message_to_str(internal_message *m){
     char buf[INET_ADDRSTRLEN];
     struct in_addr ip;
-    ip.s_addr = m->node_ip;
+    ip.s_addr = htonl(m->node_ip);
     inet_ntop(AF_INET, &ip, buf, INET_ADDRSTRLEN);
     char *res = calloc(100, sizeof(char));
     switch (m->type){

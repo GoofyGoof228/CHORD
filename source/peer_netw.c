@@ -35,7 +35,7 @@ uint32_t get_ipv4_addr(char *name){
         break;
     }
     freeaddrinfo(res);
-    return result;
+    return ntohl(result);
 }
 
 int setup_listen_socket(uint16_t port_number, char * ip_str){
@@ -76,6 +76,7 @@ int setup_listen_socket(uint16_t port_number, char * ip_str){
         break;
     }
     freeaddrinfo(result);
+
     if (p == NULL) {
         fprintf(stderr, "Setup Listen Socket: Bind failed");
         return -1;
@@ -84,50 +85,30 @@ int setup_listen_socket(uint16_t port_number, char * ip_str){
         perror("Setup Listen Socket: at listen");
         return -1;
     }
-
     return listen_sock;
 }
 
-// TODO: Cleanup
 int connect_to_peer(uint32_t ip, uint16_t port){
-    struct addrinfo client_addr;
-    memset(&client_addr, 0, sizeof(client_addr));
-    client_addr.ai_family = AF_INET;
-    client_addr.ai_socktype = SOCK_STREAM;
-    client_addr.ai_flags = AI_PASSIVE; // ToDO Do we need ai_flags?
-    struct addrinfo *server_adrr;
-    char str_port[12];
-    sprintf(str_port, "%d", port);
-    char *str_ip4;
-    struct in_addr ip_addr;
-    ip_addr.s_addr = ip;
-    str_ip4 = inet_ntoa(ip_addr);
+    // Setup Structs
+    struct in_addr sin_addr;
+    sin_addr.s_addr = htonl(ip);
+    struct sockaddr_in addr;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    addr.sin_addr = sin_addr;
 
-    int status = getaddrinfo(str_ip4 ,str_port, &client_addr, &server_adrr);
-    if (status != 0){
-        const char* err = gai_strerror(status);
-        fprintf(stderr, "connect_to_peer : %s", err);
-        exit(EXIT_FAILURE);
+    // Get Socket
+    int sock = socket(PF_INET, SOCK_STREAM, 0);
+    if(sock == -1){
+        perror("connect_to_peer : socket\n");
+        return -1;
     }
-    int sock = 0;
-    for (struct addrinfo *i = server_adrr; i != NULL; i = i->ai_next){
-        sock = socket(i->ai_family, i->ai_socktype, i->ai_protocol);
-
-        if(sock == -1){
-            perror("connect_to_peer : socket\n");
-            continue;
-        }
-
-        if(connect(sock, server_adrr->ai_addr, server_adrr->ai_addrlen) == -1){
-            close(sock);
-            perror("connect_to_peer : connect\n");
-            sock = EXIT_FAILURE;
-            continue;
-        }
-        break;
+    // Connect
+    if(connect(sock, (struct sockaddr *) &addr, sizeof(addr)) == -1){
+        close(sock);
+        perror("connect_to_peer : connect\n");
+        return -1;
     }
-    //setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, 1);
-    freeaddrinfo(server_adrr);
     return sock;
 }
 

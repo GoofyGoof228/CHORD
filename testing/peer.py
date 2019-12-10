@@ -41,7 +41,7 @@ class Tests(unittest.TestCase):
 		abs_build_folder = 'cmake-build-debug'
 		ip = '127.0.0.1'
 
-		self.peercount = 9
+		self.peercount = 50
 		startport = 4000
 		self.portrange = np.linspace(startport,startport+self.peercount-1,self.peercount)
 
