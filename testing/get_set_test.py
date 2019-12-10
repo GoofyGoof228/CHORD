@@ -2,15 +2,15 @@ import os
 import time
 import random
 
+
 def choose_num(min, max):
-    for x in range(10):
-        return random.randint(min, max+1)
+    return random.randint(min, max + 1)
 
 
-peercount = 10
+peercount = 3
 ip = '127.0.0.1'
 command = '../client_osx'
-port = choose_num(4000, 4000+peercount)
+port = choose_num(4000, 4000 + peercount - 1)
 time_interval = 0.0
 
 to_do = command + ' ' + ip + ' ' + str(int(port) + 1) + ' SET ' + ' data < data.txt'
@@ -27,4 +27,3 @@ for i in range(0, peercount):
 print('\n\n')
 to_do = command + ' ' + ip + ' ' + str(int(port) + 1) + ' DELETE ' + ' data'
 os.system(to_do)
-

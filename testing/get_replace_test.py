@@ -4,8 +4,7 @@ import random
 
 
 def choose_num(min, max):
-    for x in range(10):
-        return random.randint(min, max+1)
+    return random.randint(min, max+1)
 
 
 peercount = 10
