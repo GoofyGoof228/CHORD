@@ -162,3 +162,25 @@ void print_ft_in_file(finger_table *ft){
     printf("Logged FT succesfully\n");
     fclose(table_log);
 }
+
+ft_entry* copy_entry(ft_entry* old){
+    ft_entry* new = malloc(sizeof(ft_entry));
+    new->id = old->id;
+    new->ip = old->ip;
+    new->port = old->port;
+    return new;
+}
+ft_entry* find_corresponding_peer(finger_table* ft, uint16_t hash_id){
+    for(int i = 1; i != ft->m; i++){
+        //if id is between me and next one, send entry of next one
+        if(is_between(hash_id, ft->entries[i-1]->id, ft->entries[i]->id)){
+            ft_entry* result = copy_entry(ft->entries[i]);
+            return result;
+        }
+
+    }
+    return NULL;
+}
+ ft_entry* get_last_entry(finger_table* ft){
+     return copy_entry(ft->entries[ft->m-1]);
+}
