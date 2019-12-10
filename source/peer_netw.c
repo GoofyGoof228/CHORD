@@ -52,34 +52,34 @@ int setup_listen_socket(uint16_t port_number, char * ip_str){
     hints.ai_flags = AI_PASSIVE;
 
     if (getaddrinfo(ip_str, port, &hints, &result) != 0) {
-        fprintf(stderr, "Server: getaddrinfo error : \n");
+        fprintf(stderr, "Setup Listen Socket: getaddrinfo error : \n");
     }
     // Loop through results
     for (p = result; p != NULL; p = p->ai_next) {
         if ((listen_sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-            perror("Server: at socket");
+            perror("Setup Listen Socket: at socket");
             continue;
         }
 
         if (setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-            perror("Server: at setsockopt");
+            perror("Setup Listen Socket: at setsockopt");
             return -1;
         }
 
         if (bind(listen_sock, p->ai_addr, p->ai_addrlen) == -1) {
             close(listen_sock);
-            perror("Server: at bind");
+            perror("Setup Listen Socket: at bind");
             continue;
         }
         break;
     }
     freeaddrinfo(result);
     if (p == NULL) {
-        fprintf(stderr, "Server: Bind failed");
+        fprintf(stderr, "Setup Listen Socket: Bind failed");
         return -1;
     }
     if (listen(listen_sock, 10) == -1) {
-        perror("Server: at listen");
+        perror("Setup Listen Socket: at listen");
         return -1;
     }
 
@@ -104,7 +104,7 @@ int connect_to_peer(uint32_t ip, uint16_t port){
     int status = getaddrinfo(str_ip4 ,str_port, &client_addr, &server_adrr);
     if (status != 0){
         const char* err = gai_strerror(status);
-        fprintf(stderr, "%s", err);
+        fprintf(stderr, "connect_to_peer : %s", err);
         exit(EXIT_FAILURE);
     }
     int sock = 0;
@@ -185,6 +185,18 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                 close(peer_socket);
                 free(reply);
             }
+            else if (is_between(m_in->hash_id, self->previous_id, self->self_id)) {
+                // send repl with info of next node
+                internal_message *reply = new_internal_message(REPLY, m_in->hash_id, self->self_id, self->self_ip, self->self_port); //create_reply(self, m_in->hash_id);
+                peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
+
+                if(send_internal_message(reply, peer_socket) == -1){
+                    fprintf(stderr, " Sending Reply\n");
+                    return -1;
+                }
+                close(peer_socket);
+                free(reply);
+            }
             else {
                 // send to next peer
                 peer_socket = connect_to_peer(self->next_ip, self->next_port);
@@ -201,9 +213,8 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
 
             message *state = pop_saved_state(self->states, m_in->hash_id, INTERNAL_MES);
 
-
             if(state == NULL){
-                fprintf(stderr, "No Saved Message to match REPLY with Hash ID: %u", m_in->hash_id);
+                fprintf(stderr, "Error: No Saved Message to match REPLY with Hash ID: %u", m_in->hash_id);
                 return -1;
             }
 
@@ -212,15 +223,18 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                     //TODO finish FT
                     recieve_reply_ft(state->int_msg, self);
                     free_message(state);
-                    return 0;
                 }
-            }else {
+                else {
+                    fprintf(stderr, "Error: Internal Message of type %d in State", state->int_msg->type);
+                    return -1;
+                }
+            }
+            else {
                 external_message* to_send = state->ext_msg;
                 if (to_send == NULL) {
                     fprintf(stderr, "Error : trying to send NULL external message\n");
                     return -1;
                 }
-
                 peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
                 send_external_message(to_send, peer_socket);
                 FD_SET(peer_socket, master);
@@ -310,7 +324,9 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                 self->previous_ip = m_in->node_ip;
                 self->previous_port = m_in->node_port;
                 self->initialised_previous = true;
+
                 if(!self->initialised_next){
+
                     self->next_id = m_in->node_id;
                     self->next_ip = m_in->node_ip;
                     self->next_port = m_in->node_port;

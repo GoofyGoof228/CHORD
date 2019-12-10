@@ -10,16 +10,13 @@
 #include <ctype.h>
 #include "finger_table.h"
 //#define TEST
-#define COMMAND_LEN 15
+//#define COMMAND_LEN 15
 #define GETSOCKETERRNO() (errno)
 #define SOCKET int
 
 #ifdef TEST
 #include <string.h>
 #endif
-//#define STATIC_RING
-
-//TODO use AF_INET, do not use localhost, use 127.0.0.0 !!!!. otherweise it crashes, no fucking idea why. It makes no sence, but...
 
 int main(int argc, char* argv[]){
     // Setup Peer Info
@@ -86,25 +83,28 @@ int main(int argc, char* argv[]){
     while(running) {
         // copy FD set
         fd_set in_fd = connections_storage;
-        // value 0 = wait until a socket is ready to get read from
+
         int rv = select(max_socket+1, &in_fd, NULL, NULL, &time_out);
 
         stab_count ++;
 
         if (rv == -1) {
-            // select modifies the input set
             fprintf(stderr, "Peer: select() failed. (%d)\n", GETSOCKETERRNO());
             perror("\n");
             exit(EXIT_FAILURE);
         }
-        // Timeout:
+        // Timeout or select has returned 5 times without sending a Stabalize:
         if (rv == 0 || stab_count > 5) {
             if (self_info.initialised_next){
                 // Send Stabalize
                 internal_message *stabalize = new_internal_message(STABILIZE, 0, self_info.self_id, self_info.self_ip, self_info.self_port);
                 int peer_sock = connect_to_peer(self_info.next_ip, self_info.next_port);
+                if(peer_sock == -1) {
+                    fprintf(stderr, "Error Connecting to Next Peer (Port: %u) to send Stabalize\n", self_info.next_port);
+                    exit(EXIT_FAILURE);
+                }
                 if(send_internal_message(stabalize, peer_sock) == -1) {
-                    //fprintf(stderr, " Sending Stabalize\n");
+                    fprintf(stderr, "Error Sending Stabalize\n");
                     exit(EXIT_FAILURE);
                 }
                 close(peer_sock);
@@ -180,23 +180,19 @@ int main(int argc, char* argv[]){
                         create_ft(&self_info, -1);
                         init_fill_ft(&self_info);
                     }
-                    if(strcmp(command, "ft_l") == 0){
+                    if(strcmp(command, "fl") == 0){
                         //print FT in file
                         print_ft_in_file((finger_table*) self_info.ft);
                     }
-                    if(strcmp(command, "ft_p") == 0){
+                    if(strcmp(command, "fp") == 0){
                         print_ft((finger_table*) self_info.ft);
                     }
                     if(strcmp(command, "s") == 0){
                         running = false;
                         //break;
-
                     }
-                    if(strcmp(command, "info_l") == 0){
+                    if(strcmp(command, "i") == 0){
                         print_peer_info_long(&self_info);
-                    }
-                    if(strcmp(command, "info_s") == 0){
-                        print_peer_info_short(&self_info);
                     }
                     //i = max_socket + 1;
                     free(command);
