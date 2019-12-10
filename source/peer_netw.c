@@ -229,18 +229,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                 }
                 close(peer_socket);
                 free(reply);
-            }
-            else {
-                // send to next peer
-                peer_socket = connect_to_peer(self->next_ip, self->next_port);
-                        if(send_internal_message(reply, peer_socket) == -1){
-                            fprintf(stderr, " Sending Reply\n");
-                            return -1;
-                        }
-                        close(peer_socket);
-                        free(reply);
-                    }
-                    else {
+            }else {
                         // send to next peer
                         peer_socket = connect_to_peer(self->next_ip, self->next_port);
 

@@ -7,7 +7,7 @@ def choose_num(min, max):
     return random.randint(min, max)
 
 
-peercount = 3
+peercount = 5
 ip = '127.0.0.1'
 command = '../client_osx'
 start_port = 4000
@@ -26,5 +26,6 @@ for i in range(0, peercount):
     if time_interval != 0.0:
         time.sleep(time_interval)
 print('\n\n')
-to_do = command + ' ' + ip + ' ' + str(int(port) + 1) + ' DELETE ' + ' data'
+
+to_do = command + ' ' + ip + ' ' + str(int(start_port)) + ' DELETE ' + ' data'
 os.system(to_do)
