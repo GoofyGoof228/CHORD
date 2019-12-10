@@ -1,6 +1,0 @@
-2019-12-10 16:46:20,175 : 
-Thread 2 is about to terminate
-
-2019-12-10 16:48:54,739 : 
-Thread 2 is about to terminate
-
