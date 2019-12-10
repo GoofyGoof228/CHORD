@@ -65,6 +65,10 @@ message* pop_saved_state(list* states, uint16_t hash_id, const int type){
     if(type == EXTERNAL_MES){
         listIterator* it = listIteratorCreate(states);
         message* help = listIteratorGetCurrentElement(it);
+        if(help == NULL){
+            free(it);
+            return NULL;
+        }
         external_message* help_ext = help->ext_msg;
         while( help_ext != NULL && it->current != NULL){
             if(get_hash_id(help_ext->data->key, help_ext->data->key_len) == hash_id){
@@ -83,8 +87,12 @@ message* pop_saved_state(list* states, uint16_t hash_id, const int type){
 
         listIterator* it = listIteratorCreate(states);
         message* help = listIteratorGetCurrentElement(it);
+        if(help == NULL){
+            free(it);
+            return NULL;
+        }
         internal_message * help_in = help->int_msg;
-        while( help_in != NULL){
+        while( help_in != NULL && it->current != NULL){
             if(help_in->hash_id == hash_id){
                 //right message found
                 //listIteratorRemoveCurrent(it, NULL);

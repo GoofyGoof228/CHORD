@@ -13,8 +13,9 @@
 #include <netdb.h>
 
 #define TEST
+#define LOG_SN 0
 
-
+#define DG_FT
 uint32_t get_ipv4_addr(char *name){
     int status;
     struct addrinfo hints;
@@ -178,12 +179,16 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
 
                 if(self->ft != NULL){
                     if(((finger_table*)self->ft)->filled){
-#ifdef TEST
-                        printf("FT used after lookup for lookup\n");
-#endif
+                        #ifdef TEST
+                        printf("FT used after lookup for reply\n");
+                        #endif
                         ft_entry* result = find_corresponding_peer(self->ft, m_in->hash_id);
                         if(result != NULL){
                             //peer found - send reply
+                        #ifdef DG_FT
+                        printf("Found entry\n");
+                        print_entry(result);
+                        #endif
                             internal_message *reply = new_internal_message(REPLY, m_in->hash_id, result->id, result->ip, result->port); //create_reply(self, m_in->hash_id);
                             peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
                             if(send_internal_message(reply, peer_socket) == -1){
@@ -197,6 +202,10 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                         }else{
                             //send lookup to last known peer
                             result = get_last_entry(self->ft);
+                            #ifdef DG_FT
+                            printf("forwarding lookup to last entry\n");
+                            print_entry(result);
+                            #endif
                             peer_socket = connect_to_peer(result->ip, result->port);
                             send_internal_message(m_in, peer_socket);
                             close(peer_socket);
@@ -246,8 +255,9 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
         }
         case REPLY: {
 
+            //TODO kaka
             message *state = pop_saved_state(self->states, m_in->hash_id, INTERNAL_MES);
-
+            if(state == NULL) state = pop_saved_state(self->states, m_in->hash_id, EXTERNAL_MES);
             if(state == NULL){
                 fprintf(stderr, "Error: No Saved Message to match REPLY with Hash ID: %u", m_in->hash_id);
                 return -1;
@@ -256,7 +266,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
             if(state->internal){
                 if(state->int_msg->type == LOOKUP){
                     //TODO finish FT
-                    recieve_reply_ft(state->int_msg, self);
+                    recieve_reply_ft(m_in, self);
                     free_message(state);
                 }
                 else {
@@ -460,15 +470,19 @@ int handle_external_message(external_message * m_ex, peer_info * self, int socke
 
             if(self->ft != NULL){
                 if(((finger_table*)self->ft)->filled){
-#ifdef TEST
+                    #ifdef TEST
                     printf("FT used for lookup\n");
-#endif
+                    #endif
                     ft_entry* result = find_corresponding_peer(self->ft, hash_value);
+                    #ifdef TEST
+                    printf("FT: result\n");
+                    print_entry(result);
+                    #endif
                     if(result == NULL){
                         //TODO send lookup on next
-#ifdef TEST
+                        #ifdef TEST
                         printf("lookup sended to last entry\n");
-#endif
+                        #endif
                         internal_message * out = new_internal_message(LOOKUP, hash_value, self->self_id, self->self_ip, self->self_port);
                         //create_look_up(m_ex, self);
                         result = get_last_entry(self->ft);
@@ -483,13 +497,28 @@ int handle_external_message(external_message * m_ex, peer_info * self, int socke
                         return 0;
                     }else{
                         //TODO send action (extr)
-#ifdef TEST
+                        #ifdef TEST
                         printf("external message will be forwarded\n");
-#endif
+                        #endif
+                        /*
                         int peer_socket = connect_to_peer(result->ip, result->port);
                         send_external_message(m_ex, peer_socket);
-                        close(peer_socket);
                         free_external_message(m_ex);
+                        FD_SET(peer_socket, master);
+                        // Save the client socket
+                        payload *p = ints_to_payload(peer_socket, socket);
+                        h_set_p(self->response_sockets_head, p);
+                        //free_external_message(m_ex);
+                        free_payload(p);*/
+                        int peer_socket = connect_to_peer(result->ip, result->port);
+                        send_external_message(m_ex, peer_socket);
+                        FD_SET(peer_socket, master);
+
+                        // Save the client socket
+                        payload *p = ints_to_payload(peer_socket, m_ex->socket_recieved_from);
+                        h_set_p(self->response_sockets_head, p);
+                        //free_message();
+                        free_payload(p);
                     }
                 }
 
@@ -540,7 +569,7 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
     else if(in->ext_msg != NULL){
         external_message* m_ex = in->ext_msg;
         #ifdef TEST
-            printf("R: %12s\n", "Ext Msg");
+            printf("R: %12s id :%d\n", "Ext Msg", get_hash_id(m_ex->data->key, m_ex->data->key_len));
             //print_external_message(m_ex);
         #endif
         res = handle_external_message(m_ex, self, socket, master);

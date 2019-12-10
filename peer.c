@@ -18,6 +18,7 @@
 #include <string.h>
 #endif
 
+#define LOG_SN 0
 int main(int argc, char* argv[]){
     // Setup Peer Info
     peer_info self_info;
@@ -159,7 +160,12 @@ int main(int argc, char* argv[]){
                     #ifdef TEST
                     if(m_in->int_msg != NULL){
                         //if(m_in->int_msg->type != STABILIZE){
+                        if(LOG_SN){
                             printf("R: %s\n", internal_message_to_str(m_in->int_msg));
+                        } else if (m_in->int_msg->type != NOTIFY && m_in->int_msg->type != STABILIZE && m_in->int_msg->type != JOIN){
+                            printf("R: %s\n", internal_message_to_str(m_in->int_msg));
+                        }
+
                             //print_message(m_in);
                         //}
                     }

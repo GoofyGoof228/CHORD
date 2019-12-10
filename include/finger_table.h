@@ -15,6 +15,9 @@ struct _ft_entry{
 };
 typedef struct _ft_entry ft_entry;
 
+void print_entry(ft_entry* fe);
+
+
 struct _finger_table{
     uint32_t m; //number of bits in hash id
     uint32_t n; //id of peer having this ft
@@ -25,6 +28,7 @@ struct _finger_table{
 
 };
 typedef struct _finger_table finger_table;
+
 
 uint32_t powi(uint16_t base, uint16_t exp);
 /**

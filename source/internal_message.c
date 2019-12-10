@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 #include "internal_message.h"
 #define TEST
-
+#define LOG_SN 0
 int encode_internal_message (uint8_t *buf, internal_message *m) {
 
     // encode action
@@ -149,7 +149,12 @@ int send_internal_message(internal_message *m, int sock){
         //printf("Sent:");
         //print_internal_message(m);
     //}
+    if(LOG_SN){
         printf("S: %s\n", internal_message_to_str(m));
+    } else if (m->type != NOTIFY && m->type != STABILIZE && m->type != JOIN){
+        printf("S: %s\n", internal_message_to_str(m));
+    }
+
 
     #endif
     uint8_t *buf = calloc(INTERNAL_HEADER_LEN, sizeof(uint8_t));
