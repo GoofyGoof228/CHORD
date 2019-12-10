@@ -31,7 +31,7 @@ def got_no_data():
             line = lines[i]
             if line == 'recieved back: \n':
                 next_line = lines[i+2]
-                if next_line != 'datadatadata':
+                if next_line != 'datadatadata' and next_line != 'datadatadata\n':
                     return False
         return True
 
@@ -42,6 +42,11 @@ ip = '127.0.0.1'
 command = '../client_osx'
 port = 4000
 
+to_do = command + ' ' + ip + ' ' + str(int(port) + 1) + ' SET ' + ' data < data.txt'
+print(to_do + '\n')
+os.system(to_do)
+
+
 f_out = open('out.log', 'w+')
 default_stdout = os.dup(sys.stdout.fileno())
 os.dup2(f_out.fileno(), sys.stdout.fileno())
@@ -50,9 +55,7 @@ f_err = open('err.log', 'w+')
 default_stderr = os.dup(sys.stderr.fileno())
 os.dup2(f_err.fileno(), sys.stderr.fileno())
 
-to_do = command + ' ' + ip + ' ' + str(int(port) + 1) + ' SET ' + ' data < data.txt'
-print(to_do + '\n')
-os.system(to_do)
+
 
 for i in range(0, peercount):
     print('\n\n\n' + str(i))
@@ -60,14 +63,27 @@ for i in range(0, peercount):
     print(to_do)
     os.system(to_do)
     time.sleep(2.0)
-    os.dup2(default_stderr, sys.stderr.fileno())
-    message1 = 'Error was found ! at peer ' + str(i+1)
-    message2 = 'No answer ! from peer ' + str(i+1)
-    message3 = 'No data was got ! from peer' + str(i+1)
-    assert no_err(), message1
-    assert is_answered(), message2
-    assert got_no_data(), message3
-    os.dup2(f_err.fileno(), sys.stderr.fileno())
+
+    message1 = 'Error was found ! at peer ' + str(i)
+    message2 = 'No answer ! from peer ' + str(i)
+    message3 = 'No data was got ! from peer' + str(i)
+
+
+    try:
+        os.dup2(default_stderr, sys.stderr.fileno())
+        test1 = no_err()
+        test2 = is_answered()
+        test3 = got_no_data()
+        os.dup2(f_err.fileno(), sys.stderr.fileno())
+    except IndexError:
+        os.dup2(default_stderr, sys.stderr.fileno())
+        print("file ended")
+        os.dup2(f_err.fileno(), sys.stderr.fileno())
+    assert test1,message1
+    assert test2,message2
+    assert test3,message3
+
+
 
 os.dup2(default_stdout, sys.stdout.fileno())
 os.dup2(default_stderr, sys.stderr.fileno())

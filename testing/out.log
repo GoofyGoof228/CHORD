@@ -1,0 +1,37 @@
+
+
+
+0
+../client_osx 127.0.0.1 4000 GET  data
+Sending: 
+( Message: 0 | Type: GET | Ack: 0 | Key Length: 4| Key: data | Value Length: 0  )
+recieved back: 
+( Message: 0 | Type: GET | Ack: 1 | Key Length: 4| Key: data | Value Length: 12 | Value:  100 97 116 97 100 97 116 97 100 97 116 97 )
+datadatadata
+
+
+1
+../client_osx 127.0.0.1 4001 GET  data
+Sending: 
+( Message: 0 | Type: GET | Ack: 0 | Key Length: 4| Key: data | Value Length: 0  )
+recieved back: 
+( Message: 0 | Type: GET | Ack: 1 | Key Length: 4| Key: data | Value Length: 12 | Value:  100 97 116 97 100 97 116 97 100 97 116 97 )
+datadatadata
+
+
+2
+../client_osx 127.0.0.1 4002 GET  data
+Sending: 
+( Message: 0 | Type: GET | Ack: 0 | Key Length: 4| Key: data | Value Length: 0  )
+recieved back: 
+( Message: 0 | Type: GET | Ack: 1 | Key Length: 4| Key: data | Value Length: 12 | Value:  100 97 116 97 100 97 116 97 100 97 116 97 )
+datadatadata
+
+
+3
+../client_osx 127.0.0.1 4003 GET  data
+Sending: 
+( Message: 0 | Type: GET | Ack: 0 | Key Length: 4| Key: data | Value Length: 0  )
+recieved back: 
+( Message: 0 | Type: GET | Ack: 1 | Key Length: 4| Key: data | Value Length: 12 | Value:  100 97 116 97 100 97 116 97 100 97 116 97 )
+datadatadata
