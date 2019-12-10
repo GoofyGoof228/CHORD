@@ -9,8 +9,8 @@
 #include <errno.h>
 #include <ctype.h>
 #include "finger_table.h"
-//#define TEST
-//#define COMMAND_LEN 15
+#define TEST
+#define COMMAND_LEN 15
 #define GETSOCKETERRNO() (errno)
 #define SOCKET int
 
@@ -157,10 +157,10 @@ int main(int argc, char* argv[]){
                     }
                     #ifdef TEST
                     if(m_in->int_msg != NULL){
-                        if(m_in->int_msg->type != STABILIZE){
-                            printf("recieved: \n");
-                            print_message(m_in);
-                        }
+                        //if(m_in->int_msg->type != STABILIZE){
+                            printf("R: %s\n\n", internal_message_to_str(m_in->int_msg));
+                            //print_message(m_in);
+                        //}
                     }
                     fflush(stdout);
                     fflush(stdin);
@@ -170,34 +170,34 @@ int main(int argc, char* argv[]){
                     //free_message(m_in);
                 }else{
                     // Shutdown
-#ifdef TEST
-                    char *command = calloc(COMMAND_LEN, sizeof(char));
-                    fscanf(stdin, "%s", command);
-                    fflush(stdin);
-                    if(strcmp(command, "ft") == 0){
-                        //TODO force to build ft
-                        printf("build a finger table !\n");
-                        create_ft(&self_info, -1);
-                        init_fill_ft(&self_info);
-                    }
-                    if(strcmp(command, "fl") == 0){
-                        //print FT in file
-                        print_ft_in_file((finger_table*) self_info.ft);
-                    }
-                    if(strcmp(command, "fp") == 0){
-                        print_ft((finger_table*) self_info.ft);
-                    }
-                    if(strcmp(command, "s") == 0){
-                        running = false;
-                        //break;
-                    }
-                    if(strcmp(command, "i") == 0){
-                        print_peer_info_long(&self_info);
-                    }
-                    //i = max_socket + 1;
-                    free(command);
-                    continue;
-#endif
+                    #ifdef TEST
+                        char *command = calloc(COMMAND_LEN, sizeof(char));
+                        fscanf(stdin, "%s", command);
+                        fflush(stdin);
+                        if(strcmp(command, "ft") == 0){
+                            //TODO force to build ft
+                            printf("build a finger table !\n");
+                            create_ft(&self_info, -1);
+                            init_fill_ft(&self_info);
+                        }
+                        if(strcmp(command, "fl") == 0){
+                            //print FT in file
+                            print_ft_in_file((finger_table*) self_info.ft);
+                        }
+                        if(strcmp(command, "fp") == 0){
+                            print_ft((finger_table*) self_info.ft);
+                        }
+                        if(strcmp(command, "s") == 0){
+                            running = false;
+                            //break;
+                        }
+                        if(strcmp(command, "i") == 0){
+                            print_peer_info_long(&self_info);
+                        }
+                        //i = max_socket + 1;
+                        free(command);
+                        continue;
+                    #endif
                 }
             }
         }

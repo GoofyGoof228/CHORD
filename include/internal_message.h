@@ -31,4 +31,6 @@ internal_message * new_internal_message (internal_action type, uint16_t hash_id,
 
 void print_internal_message(internal_message* m);
 
+char * internal_message_to_str(internal_message *m);
+
 #endif //BLOCK4_INTERNAL_MESSAGE_H

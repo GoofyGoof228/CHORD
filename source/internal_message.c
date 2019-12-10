@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include "internal_message.h"
+#define TEST
 
 int encode_internal_message (uint8_t *buf, internal_message *m) {
 
@@ -143,13 +144,14 @@ int decode_internal_header (uint8_t *buf, internal_message *m) {
 }
 
 int send_internal_message(internal_message *m, int sock){
-#ifdef TEST
-    if(m->type != STABILIZE){
-        printf("sending\n");
-        print_internal_message(m);
-    }
+    #ifdef TEST
+    //if(m->type != STABILIZE){
+        //printf("Sent:");
+        //print_internal_message(m);
+    //}
+        printf("S: %s\n\n", internal_message_to_str(m));
 
-#endif
+    #endif
     uint8_t *buf = calloc(INTERNAL_HEADER_LEN, sizeof(uint8_t));
 
     int bytes_sent = 0;
@@ -188,6 +190,8 @@ internal_message * new_internal_message (internal_action type, uint16_t hash_id,
     return m;
 }
 
+
+
 void print_internal_message(internal_message* m){
     if(m == NULL){
         fprintf(stderr, "void print_internal_message : m == NULL");
@@ -216,4 +220,25 @@ void print_internal_message(internal_message* m){
     printf("node ip : %s\n", buf);
     printf("node port : %d\n", m->node_port);
     fflush(stdout);
+
+}
+
+char * internal_message_to_str(internal_message *m){
+    char buf[INET_ADDRSTRLEN];
+    struct in_addr ip;
+    ip.s_addr = m->node_ip;
+    inet_ntop(AF_INET, &ip, buf, INET_ADDRSTRLEN);
+    char *res = calloc(100, sizeof(char));
+    switch (m->type){
+        case LOOKUP: snprintf(res, 100* sizeof(char),"LOOKUP %u @ %u:%s H: %u", m->node_id, m->node_port, buf, m->hash_id); break;
+        case REPLY: snprintf(res, 100* sizeof(char),"REPLY %u @ %u:%s H: %u", m->node_id, m->node_port, buf, m->hash_id); break;
+        case JOIN: snprintf(res, 100* sizeof(char),"JOIN %u @ %u:%s", m->node_id, m->node_port, buf); break;
+        case STABILIZE: snprintf(res, 100* sizeof(char),"STABILIZE %u @ %u:%s", m->node_id, m->node_port, buf); break;
+        case NOTIFY: snprintf(res, 100* sizeof(char),"NOTIFY %u @ %u:%s", m->node_id, m->node_port, buf); break;
+        case FINGER: snprintf(res, 100* sizeof(char),"FINGER %u @ %u:%s", m->node_id, m->node_port, buf); break;
+        case F_ACK: snprintf(res, 100* sizeof(char),"F_ACK %u @ %u:%s", m->node_id, m->node_port, buf); break;
+        default: snprintf(res, 100* sizeof(char),"Unknown");
+    }
+
+    return res;
 }

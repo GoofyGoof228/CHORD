@@ -12,6 +12,8 @@
 #include "finger_table.h"
 #include <netdb.h>
 
+#define TEST
+
 
 uint32_t get_ipv4_addr(char *name){
     int status;
