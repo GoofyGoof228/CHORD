@@ -1,45 +1,16 @@
 import os
 import time
-import sys
+import random
 
-
-def no_err():
-    with open('err.log') as f:
-        if 'error' in f.read():
-            return False
-        if 'Error' in f.read():
-            return False
-        return True
-
-
-def is_answered():
-    with open('out.log', 'r') as f:
-        lines = f.readlines()
-        for i in range(0, len(lines)):
-            line = lines[i]
-            if line == 'Sending: \n':
-                next_line = lines[i+2]
-                if next_line != 'recieved back: \n':
-                    return False
-        return True
-
-
-def got_no_data():
-    with open('out.log', 'r') as f:
-        lines = f.readlines()
-        for i in range(0, len(lines)):
-            line = lines[i]
-            if line == 'recieved back: \n':
-                next_line = lines[i+2]
-                if next_line != 'datadatadata' and next_line != 'datadatadata\n':
-                    return False
-        return True
+def choose_num(min, max):
+    for x in range(10):
+        return random.randint(min, max+1)
 
 
 peercount = 10
 ip = '127.0.0.1'
 command = '../client_osx'
-port = 4000
+port = choose_num(4000, 4000+peercount)
 time_interval = 0.0
 
 to_do = command + ' ' + ip + ' ' + str(int(port) + 1) + ' SET ' + ' data < data.txt'

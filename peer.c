@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include "finger_table.h"
-//#define TEST
+#define TEST
 #define COMMAND_LEN 15
 #define GETSOCKETERRNO() (errno)
 #define SOCKET int

@@ -1,11 +1,17 @@
 import os
 import time
+import random
+
+
+def choose_num(min, max):
+    for x in range(10):
+        return random.randint(min, max+1)
 
 
 peercount = 10
 ip = '127.0.0.1'
 command = '../client_osx'
-port = 4000
+port = choose_num(4000, 4000+peercount)
 time_interval = 0.0
 
 
