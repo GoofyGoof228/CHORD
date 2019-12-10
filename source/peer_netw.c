@@ -257,8 +257,16 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                 self->previous_port = m_in->node_port;
                 self->initialised_previous = true;
             }
+            else if (is_between(m_in->node_id, self->previous_id, self->self_id)) {
+                // Update Prev
+                self->previous_id = m_in->node_id;
+                self->previous_ip = m_in->node_ip;
+                self->previous_port = m_in->node_port;
+                self->initialised_previous = true;
+            }
             // send notify
             internal_message * out = new_internal_message(NOTIFY, 0, self->previous_id, self->previous_ip, self->previous_port);
+
             peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
             if(send_internal_message(out, peer_socket) == -1) {
                 fprintf(stderr, " Sending Notify after Stabalize\n");
@@ -274,15 +282,17 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                 // Check if I am Previous Node
                 if(self->self_id != m_in->node_id) {
                     #ifdef TEST
-                        printf("before NOTIFY\n");
-                        print_peer_info_long(self);
+                        //printf("before NOTIFY\n");
+                        //print_peer_info_long(self);
+                        printf("BN:%s\n", peer_info_to_str(self));
                     #endif
                     self->next_id = m_in->node_id;
                     self->next_ip = m_in->node_ip;
                     self->next_port = m_in->node_port;
                     #ifdef TEST
-                        printf("after NOTIFY\n");
-                        print_peer_info_long(self);
+                        //printf("after NOTIFY\n");
+                        //print_peer_info_long(self);
+                        printf("AN:%s\n", peer_info_to_str(self));
                     #endif
                 }
             }
@@ -290,16 +300,18 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
             else{
                 // Set Successor
                 #ifdef TEST
-                    printf("before NOTIFY\n");
-                    print_peer_info_long(self);
+                    //printf("before NOTIFY\n");
+                    //print_peer_info_long(self);
+                    printf("BJ:%s\n", peer_info_to_str(self));
                 #endif
                 self->next_id = m_in->node_id;
                 self->next_ip = m_in->node_ip;
                 self->next_port = m_in->node_port;
                 self->initialised_next = true;
                 #ifdef TEST
-                    printf("after NOTIFY\n");
-                    print_peer_info_long(self);
+                    //printf("after NOTIFY\n");
+                    //print_peer_info_long(self);
+                    printf("AJ:%s\n", peer_info_to_str(self));
                 #endif
             }
             break;
@@ -342,8 +354,10 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
             break;
         }
         case F_ACK: {
+            #ifdef TEST
+                printf("I: %s\n", peer_info_to_str(self));
+            #endif
             fprintf(stderr, "F_Ack: Not implemented\n");
-            //TO DO receive ack, delete saved state ??
             return -1;
             break;
 
@@ -441,12 +455,7 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
         FD_CLR(socket, master);
 
         internal_message* m_in = in->int_msg;
-        #ifdef TEST
-            if(m_in->type != NOTIFY && m_in->type != STABILIZE){
-                printf("\nRecived:\n");
-                print_internal_message(m_in);
-            }
-        #endif
+
         res = handle_internal_message(m_in, self, socket, master);
         free_message(in);
         return res;
@@ -454,8 +463,8 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
     else if(in->ext_msg != NULL){
         external_message* m_ex = in->ext_msg;
         #ifdef TEST
-            printf("\nRecived:\n");
-            print_external_message(m_ex);
+            printf("R: %12s\n", "Ext Msg");
+            //print_external_message(m_ex);
         #endif
         res = handle_external_message(m_ex, self, socket, master);
     }

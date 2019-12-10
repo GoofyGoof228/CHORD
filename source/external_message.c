@@ -107,9 +107,9 @@ int decode_external_header(uint8_t *buf, external_message *msg){
 
 int send_external_message(external_message *m, int client_sock){
 #ifdef TEST
-    printf("sending\n");
-    print_external_message(m);
-    fflush(stdout);
+    //printf("sending\n");
+    //print_external_message(m);
+    //fflush(stdout);
 #endif
     int key_len = 0;
     int val_len = 0;
@@ -146,9 +146,9 @@ int send_external_message(external_message *m, int client_sock){
     } while (bytes_sent < buf_len);
     free(buf);
     #ifdef TEST
-        printf("\nSent:\n");
-        print_external_message(m);
-        fflush(stdout);
+        //printf("\nSent:\n");
+        //print_external_message(m);
+        //fflush(stdout);
     #endif
 
     return 0;

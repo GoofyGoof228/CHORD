@@ -31,7 +31,8 @@ int main(int argc, char* argv[]){
             exit(EXIT_FAILURE);
     }
     #ifdef TEST
-        print_peer_info_long(&self_info);
+        //print_peer_info_long(&self_info);
+        printf("I: %s\n", peer_info_to_str(&self_info));
     #endif
 
     // setup connection
@@ -158,7 +159,7 @@ int main(int argc, char* argv[]){
                     #ifdef TEST
                     if(m_in->int_msg != NULL){
                         //if(m_in->int_msg->type != STABILIZE){
-                            printf("R: %s\n\n", internal_message_to_str(m_in->int_msg));
+                            printf("R: %s\n", internal_message_to_str(m_in->int_msg));
                             //print_message(m_in);
                         //}
                     }

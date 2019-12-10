@@ -149,7 +149,7 @@ int send_internal_message(internal_message *m, int sock){
         //printf("Sent:");
         //print_internal_message(m);
     //}
-        printf("S: %s\n\n", internal_message_to_str(m));
+        printf("S: %s\n", internal_message_to_str(m));
 
     #endif
     uint8_t *buf = calloc(INTERNAL_HEADER_LEN, sizeof(uint8_t));

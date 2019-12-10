@@ -177,6 +177,12 @@ void print_peer_info_long(peer_info* self){
 
 }
 
+char *peer_info_to_str(peer_info *self){
+    char *res = calloc(100, sizeof(char));
+    snprintf(res, 100* sizeof(char), "%12s%10u @ %4u\tPREV:%10u @ %4u\tNEXT:%10u @ %4u","PEER INFO", self->self_id, self->self_port, self->previous_id, self->previous_port, self->next_id, self->next_port);
+    return res;
+}
+
 bool time_out(struct timeval *start){
     struct timeval now;
     gettimeofday(&now, 0);
