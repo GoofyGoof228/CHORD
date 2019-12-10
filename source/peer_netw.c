@@ -257,19 +257,14 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                 self->previous_port = m_in->node_port;
                 self->initialised_previous = true;
             }
-            else if(m_in->node_id != self->previous_id) {
-                //TODO send notify
-                internal_message * out = new_internal_message(NOTIFY, 0, self->previous_id, self->previous_ip, self->previous_port);
-                peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
-                if(send_internal_message(out, peer_socket) == -1) {
-                    fprintf(stderr, " Sending Notify after Stabalize\n");
-                    return -1;
-                }
-                close(peer_socket);
+            // send notify
+            internal_message * out = new_internal_message(NOTIFY, 0, self->previous_id, self->previous_ip, self->previous_port);
+            peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
+            if(send_internal_message(out, peer_socket) == -1) {
+                fprintf(stderr, " Sending Notify after Stabalize\n");
+                return -1;
             }
-            else {
-                    //everything ok
-            }
+            close(peer_socket);
             break;
 
         }

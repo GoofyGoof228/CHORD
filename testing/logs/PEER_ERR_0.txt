@@ -1,0 +1,18 @@
+2019-12-10 13:47:25,813 : connect_to_peer : connect
+
+
+2019-12-10 13:47:25,813 : : Connection refused
+
+
+2019-12-10 13:47:25,813 : Error while Sending Internal Message: send() error: Socket operation on non-socket
+
+
+2019-12-10 13:47:25,814 : Error Sending Stabalize
+
+
+2019-12-10 13:47:25,814 : 
+Thread 0 is about to terminate
+
+2019-12-10 16:48:54,747 : 
+Thread 0 is about to terminate
+

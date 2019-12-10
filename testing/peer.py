@@ -56,20 +56,20 @@ class Tests(unittest.TestCase):
 		def thread_function(cmd,threadnumber,out_logger,err_logger):
 
 			#out_logger.info("Starting new Peer "+ threadnumber)
-			process = subprocess.Popen(cmd, stdout=subprocess.PIPE,stderr=subprocess.PIPE,universal_newlines=True)
+			process = subprocess.Popen(cmd, stdout=subprocess.PIPE ,stderr=subprocess.PIPE,universal_newlines=True)
 				#print(process.communicate())
 			while True:
 				output = process.stderr.readline()
 				std_out = process.stdout.readline()
 				if (output == b'' or output == '') and process.poll() != None:
-					out_logger.debug("\nThread "+threadnumber+" is about to terminate")
-					err_logger.debug("\nThread "+threadnumber+" is about to terminate")
+					out_logger.info("\nThread "+threadnumber+" is about to terminate")
+					err_logger.info("\nThread "+threadnumber+" is about to terminate")
 					print("Exception with "+ cmd[1] +" "+cmd[2])
 					assert(False)
 					break
 				if output:
 					print("ERROR")
-					err_logger.debug(output)
+					err_logger.info(output)
 				if std_out:
 					out_logger.info(std_out)
 					print(" WE ARE IN STDOUT")

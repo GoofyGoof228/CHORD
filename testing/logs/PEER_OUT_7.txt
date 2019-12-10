@@ -1,0 +1,6 @@
+2019-12-10 16:46:20,177 : 
+Thread 7 is about to terminate
+
+2019-12-10 16:48:54,738 : 
+Thread 7 is about to terminate
+
