@@ -6,7 +6,7 @@ import numpy as np
 import time
 import unittest
 import os
-
+import platform
 formatter = logging.Formatter('%(asctime)s : %(message)s\n')
 
 class Logger:
@@ -36,6 +36,8 @@ class Tests(unittest.TestCase):
 	def test_start_peers(self):
 
 		terminal_invocation = 'gnome-terminal -x'
+		terminal_invocation_osx = ['osascript -e \'tell app \"Terminal\" \n do script \"', '\"\n  end tell\' ']
+
 		abs_build_folder = 'cmake-build-debug'
 		ip = '127.0.0.1'
 
