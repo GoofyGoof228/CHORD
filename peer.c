@@ -45,6 +45,7 @@ int main(int argc, char* argv[]){
     struct timeval time_out;
     time_out.tv_sec = 2;
     time_out.tv_usec = 0;
+
     bool running = true;
 
     fd_set connections_storage;
@@ -79,23 +80,19 @@ int main(int argc, char* argv[]){
         close(peer_sock);
     }
 
-    int stab_count = 0;
+    time_t last_stab_time = time(NULL);
 
     while(running) {
         // copy FD set
         fd_set in_fd = connections_storage;
 
-        int rv = select(max_socket+1, &in_fd, NULL, NULL, &time_out);
-
-        stab_count ++;
-
-        if (rv == -1) {
+        if (select(max_socket+1, &in_fd, NULL, NULL, &time_out) == -1) {
             fprintf(stderr, "Peer: select() failed. (%d)\n", GETSOCKETERRNO());
             perror("\n");
             exit(EXIT_FAILURE);
         }
         // Timeout or select has returned 5 times without sending a Stabalize:
-        if (rv == 0 || stab_count > 5) {
+        if (time(NULL) - last_stab_time >= 2) {
             if (self_info.initialised_next){
                 // Send Stabalize
                 internal_message *stabalize = new_internal_message(STABILIZE, 0, self_info.self_id, self_info.self_ip, self_info.self_port);
@@ -109,8 +106,8 @@ int main(int argc, char* argv[]){
                     exit(EXIT_FAILURE);
                 }
                 close(peer_sock);
-                stab_count = 0;
             }
+            last_stab_time = time(NULL);
             continue;
         }
         SOCKET i;
