@@ -59,55 +59,45 @@ int setup_peer_info(peer_info * self, char *argv[], int argc){
 }
 
 
-message* pop_saved_state(list* states, uint16_t hash_id, const int type){
+internal_message* pop_saved_state_int(list* states, uint16_t hash_id){
     //iterate over list and find right saved message
-    //iterate over list and find right saved message
-    if(type == EXTERNAL_MES){
         listIterator* it = listIteratorCreate(states);
-        message* help = listIteratorGetCurrentElement(it);
-        if(help == NULL){
+        internal_message* candidate = listIteratorGetCurrentElement(it);
+        if(candidate == NULL){
             free(it);
             return NULL;
         }
-        external_message* help_ext = help->ext_msg;
-        while( help_ext != NULL && it->current != NULL){
-            if(get_hash_id(help_ext->data->key, help_ext->data->key_len) == hash_id){
+        while(it->current != NULL){
+            if(candidate->hash_id == hash_id){
                 //right message found
-                //listIteratorRemoveCurrent(it, NULL);
+                listIteratorRemoveCurrent(it, NULL);
                 break;
             }
-            help = listIteratorGetNextElement(it);
-            help_ext = help->ext_msg;
+            candidate = listIteratorGetNextElement(it);
         }
-        listIteratorRemoveCurrent(it, NULL);
         free(it);
-        return help;
-
-    }else if(type == INTERNAL_MES){
-
-        listIterator* it = listIteratorCreate(states);
-        message* help = listIteratorGetCurrentElement(it);
-        if(help == NULL){
-            free(it);
-            return NULL;
-        }
-        internal_message * help_in = help->int_msg;
-        while( help_in != NULL && it->current != NULL){
-            if(help_in->hash_id == hash_id){
-                //right message found
-                //listIteratorRemoveCurrent(it, NULL);
-                break;
-            }
-            help = listIteratorGetNextElement(it);
-            help_in = help->int_msg;
-        }
-        listIteratorRemoveCurrent(it, NULL);
-        free(it);
-        return help;
-    }
-    return NULL;
+        return candidate;
 }
-
+external_message* pop_saved_state_ext(list* states, uint16_t hash_id){
+    //iterate over list and find right saved message
+    listIterator* it = listIteratorCreate(states);
+    external_message* candidate = listIteratorGetCurrentElement(it);
+    if(candidate == NULL){
+        free(it);
+        return NULL;
+    }
+    while(it->current != NULL){
+        uint16_t candidate_id = get_hash_id(candidate->data->key, candidate->data->key_len);
+        if(candidate_id == hash_id){
+            //right message found
+            listIteratorRemoveCurrent(it, NULL);
+            break;
+        }
+        candidate = listIteratorGetNextElement(it);
+    }
+    free(it);
+    return candidate;
+}
 bool is_between(uint16_t hash, uint16_t prev, uint16_t now){
     if (prev > now) {
         return ((hash > prev) && (UINT16_MAX >= hash)) || (hash > 0 && hash <= now);
@@ -180,7 +170,8 @@ void print_peer_info_long(peer_info* self){
     printf("next IP : %s\n", next_buf);
 
     printf("next PORT : %d\n", self->next_port);
-    printf("number of saved states : %d\n", listGetSize(self->states));
+    printf("number of saved internal states : %d\n", listGetSize(self->internal_states));
+    printf("number of saved external states : %d\n", listGetSize(self->external_states));
     fflush(stdout);
 
 }

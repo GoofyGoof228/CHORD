@@ -89,13 +89,13 @@ int setup_listen_socket(uint16_t port_number, char * ip_str){
     return listen_sock;
 }
 
-// TODO: Cleanup
+
 int connect_to_peer(uint32_t ip, uint16_t port){
     struct addrinfo client_addr;
     memset(&client_addr, 0, sizeof(client_addr));
     client_addr.ai_family = AF_INET;
     client_addr.ai_socktype = SOCK_STREAM;
-    client_addr.ai_flags = AI_PASSIVE; // ToDO Do we need ai_flags?
+    client_addr.ai_flags = AI_PASSIVE;
     struct addrinfo *server_adrr;
     char str_port[12];
     sprintf(str_port, "%d", port);
@@ -214,7 +214,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                     }
 
                 }else{
-                    //TODO do it in old manner
+                    //TO DO do it in old manner
                     if (is_between(m_in->hash_id, self->self_id, self->next_id)) {
                         // send repl with info of next node
                         internal_message *reply = new_internal_message(REPLY, m_in->hash_id, self->next_id, self->next_ip, self->next_port); //create_reply(self, m_in->hash_id);
@@ -256,40 +256,30 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
         case REPLY: {
 
             //TODO kaka
-            message *state = pop_saved_state(self->states, m_in->hash_id, INTERNAL_MES);
-            if(state == NULL) state = pop_saved_state(self->states, m_in->hash_id, EXTERNAL_MES);
-            if(state == NULL){
+            internal_message *state = pop_saved_state_int(self->internal_states, m_in->hash_id);
+            if(state != NULL && state->type == LOOKUP){
+                recieve_reply_ft(m_in, self);
+                free(state);
+                close(socket);
+                break;
+            }
+            /*if(state == NULL){
                 fprintf(stderr, "Error: No Saved Message to match REPLY with Hash ID: %u", m_in->hash_id);
                 return -1;
-            }
-
-            if(state->internal){
-                if(state->int_msg->type == LOOKUP){
-                    //TODO finish FT
-                    recieve_reply_ft(m_in, self);
-                    free_message(state);
-                }
-                else {
-                    fprintf(stderr, "Error: Internal Message of type %d in State", state->int_msg->type);
-                    return -1;
-                }
-            }
-            else {
-                external_message* to_send = state->ext_msg;
+            }*/
+            external_message* to_send = pop_saved_state_ext(self->external_states, m_in->hash_id);
                 if (to_send == NULL) {
                     fprintf(stderr, "Error : trying to send NULL external message\n");
                     return -1;
                 }
                 peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
                 send_external_message(to_send, peer_socket);
+                // Save the peer socket
                 FD_SET(peer_socket, master);
-
-                // Save the client socket
                 payload *p = ints_to_payload(peer_socket, to_send->socket_recieved_from);
                 h_set_p(self->response_sockets_head, p);
-                free_message(state);
+                free_external_message(to_send);
                 free_payload(p);
-            }
             break;
         }
         case STABILIZE: {
@@ -423,7 +413,7 @@ int handle_external_message(external_message * m_ex, peer_info * self, int socke
     // Ack from Peer
     if(m_ex->ack == true){
 
-        // TODO Clean up this ugly mess
+        // TO DO Clean up this ugly mess
         payload *p1 = ints_to_payload(socket, 0);
         payload *p2 = h_get(self->response_sockets_head, p1->key, p1->key_len);
         free_payload(p1);
@@ -463,8 +453,7 @@ int handle_external_message(external_message * m_ex, peer_info * self, int socke
         // Send Lookup
         else{
             // save the state
-            message* to_save = create_wrapper(m_ex, EXTERNAL_MES);
-            listPushBack(self->states, to_save);
+            listPushBack(self->external_states, m_ex);
             int hash_value = get_hash_id(m_ex->data->key, m_ex->data->key_len);
 
 
@@ -479,7 +468,7 @@ int handle_external_message(external_message * m_ex, peer_info * self, int socke
                     print_entry(result);
                     #endif
                     if(result == NULL){
-                        //TODO send lookup on next
+                        //TO DO send lookup on next
                         #ifdef TEST
                         printf("lookup sended to last entry\n");
                         #endif
@@ -496,20 +485,10 @@ int handle_external_message(external_message * m_ex, peer_info * self, int socke
                         free(out);
                         return 0;
                     }else{
-                        //TODO send action (extr)
+                        //TO DO send action (extr)
                         #ifdef TEST
                         printf("external message will be forwarded\n");
                         #endif
-                        /*
-                        int peer_socket = connect_to_peer(result->ip, result->port);
-                        send_external_message(m_ex, peer_socket);
-                        free_external_message(m_ex);
-                        FD_SET(peer_socket, master);
-                        // Save the client socket
-                        payload *p = ints_to_payload(peer_socket, socket);
-                        h_set_p(self->response_sockets_head, p);
-                        //free_external_message(m_ex);
-                        free_payload(p);*/
                         int peer_socket = connect_to_peer(result->ip, result->port);
                         send_external_message(m_ex, peer_socket);
                         FD_SET(peer_socket, master);
@@ -524,7 +503,7 @@ int handle_external_message(external_message * m_ex, peer_info * self, int socke
 
             }
             else{
-                //TODO do it in old manner
+                //TO DO do it in old manner
                 internal_message * out = new_internal_message(LOOKUP, hash_value, self->self_id, self->self_ip, self->self_port); //create_look_up(m_ex, self);
                 int peer_socket = connect_to_peer(self->next_ip, self->next_port);
                 if(send_internal_message(out, peer_socket) == -1){

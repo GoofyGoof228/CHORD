@@ -39,7 +39,9 @@ struct _peer_info{
 
     payload** hash_head;
     payload** response_sockets_head;
-    list* states;
+    //TODO two list for different types ???
+    list* internal_states;
+    list* external_states;
     void* ft;
 
 };
@@ -59,7 +61,9 @@ char *peer_info_to_str(peer_info *self);
 
 message* get_saved_state(list* states, uint16_t hash_id, const int type);
 
-message* pop_saved_state(list* states, uint16_t hash_id, const int type);
+internal_message* pop_saved_state_int(list* states, uint16_t hash_id);
+
+external_message* pop_saved_state_ext(list* states, uint16_t hash_id);
 
 bool is_between(uint16_t hash, uint16_t prev, uint16_t now);
 

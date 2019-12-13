@@ -52,7 +52,7 @@ void h_set(payload **head, uint8_t* key, uint16_t key_len, uint8_t* value, uint3
             //fprintf(stderr, "Nullpointer exception at h_set : value");
             return;
         } else {
-            //TODO rewrite with empty value
+            //TO DO rewrite with empty value
             h_del(head, key, key_len);
             return;
         }

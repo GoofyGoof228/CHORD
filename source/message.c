@@ -41,7 +41,7 @@ int recv_message(message *m, int sock){
 
     int bytes_recieved = 0;
     uint8_t *buf = calloc(EXTERNAL_HEADER_LEN, sizeof(uint8_t));
-    // TODO: Non Blocking
+    // TO DO: Non Blocking
     // Get first Byte
     bytes_recieved = recv(sock, buf, 1, MSG_WAITALL);
     if(bytes_recieved == -1){ // error
@@ -60,7 +60,7 @@ int recv_message(message *m, int sock){
             fprintf(stderr, "Failed to get external_message: header - realloc error");
             return -1;
         }
-        // TODO: Non Blocking
+        // TO DO: Non Blocking
         // Getting Header
         bytes_recieved += recv(sock, buf + 1, INTERNAL_HEADER_LEN - 1, MSG_WAITALL);
         if(bytes_recieved == -1){ // error

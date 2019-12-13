@@ -14,7 +14,7 @@
 #define NUM_BITS_IN_HASH 16
 #define TEST
 
-#define DG_FT
+//#define DG_FT
 void print_entry(ft_entry* fe){
     if(fe == NULL){
         fprintf(stderr,"entry == NULL");
@@ -101,7 +101,6 @@ void refill_ft(peer_info* self){
 }
 
 void recieve_reply_ft(internal_message* lp, peer_info* self){
-    //TODO which flag should be set, to recongnise ft lookup answer ???
 #ifdef DG_FT
     printf("recieve reply FT\n");
     print_internal_message(lp);
@@ -111,7 +110,7 @@ void recieve_reply_ft(internal_message* lp, peer_info* self){
     ft->entries[index] = create_entry(lp->node_id, lp->node_ip, lp->node_port);
     if(ft_is_done(ft) && ((finger_table*)self->ft)->socket_asked_to_dew_it != -1){
         //case for commando-line
-        //TODO send ack
+        //TO DO send ack
         internal_message out;
         out.hash_id = ((finger_table*)self->ft)->n;
         out.node_id = self->self_id;
@@ -122,7 +121,7 @@ void recieve_reply_ft(internal_message* lp, peer_info* self){
     }
 }
 void search_for_successor(uint16_t id, peer_info* self){
-    //TODO send "look up"
+    //TO DO send "look up"
     internal_message* look_up = malloc(sizeof(internal_message));
     look_up->hash_id = id;
     look_up->node_id = self->self_id;
@@ -130,7 +129,7 @@ void search_for_successor(uint16_t id, peer_info* self){
     look_up->node_port = self->self_port;
     look_up->type = LOOKUP;
 
-    listPushBack(self->states, create_wrapper(look_up, INTERNAL_MES));
+    listPushBack(self->internal_states, look_up);
     int next_peer_sock = connect_to_peer(self->next_ip, self->next_port);
     send_internal_message(look_up, next_peer_sock);
     //free(look_up);

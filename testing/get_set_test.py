@@ -7,7 +7,7 @@ def choose_num(min, max):
     return random.randint(min, max)
 
 stat_get = False
-peercount = 5
+peercount = 9
 ip = '127.0.0.1'
 command = '../client_osx'
 start_port = 4000
