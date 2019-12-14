@@ -149,7 +149,7 @@ int send_internal_message(internal_message *m, int sock){
         //printf("Sent:");
         //print_internal_message(m);
     //}
-        printf("S: %s\n\n", internal_message_to_str(m));
+        printf("S: %s\n", internal_message_to_str(m));
 
     #endif
     uint8_t *buf = calloc(INTERNAL_HEADER_LEN, sizeof(uint8_t));
@@ -215,28 +215,28 @@ void print_internal_message(internal_message* m){
     printf("node id : %d\n", m->node_id);
     char buf[INET_ADDRSTRLEN];
     struct in_addr ip;
-    ip.s_addr = m->node_ip;
-    inet_ntop(AF_INET, &ip, buf, INET_ADDRSTRLEN);
+    ip.s_addr = htonl(m->node_ip);    inet_ntop(AF_INET, &ip, buf, INET_ADDRSTRLEN);
     printf("node ip : %s\n", buf);
     printf("node port : %d\n", m->node_port);
     fflush(stdout);
 
 }
 
+
 char * internal_message_to_str(internal_message *m){
     char buf[INET_ADDRSTRLEN];
     struct in_addr ip;
-    ip.s_addr = m->node_ip;
+    ip.s_addr = htonl(m->node_ip);
     inet_ntop(AF_INET, &ip, buf, INET_ADDRSTRLEN);
     char *res = calloc(100, sizeof(char));
     switch (m->type){
-        case LOOKUP: snprintf(res, 100* sizeof(char),"LOOKUP %u @ %u:%s H: %u", m->node_id, m->node_port, buf, m->hash_id); break;
-        case REPLY: snprintf(res, 100* sizeof(char),"REPLY %u @ %u:%s H: %u", m->node_id, m->node_port, buf, m->hash_id); break;
-        case JOIN: snprintf(res, 100* sizeof(char),"JOIN %u @ %u:%s", m->node_id, m->node_port, buf); break;
-        case STABILIZE: snprintf(res, 100* sizeof(char),"STABILIZE %u @ %u:%s", m->node_id, m->node_port, buf); break;
-        case NOTIFY: snprintf(res, 100* sizeof(char),"NOTIFY %u @ %u:%s", m->node_id, m->node_port, buf); break;
-        case FINGER: snprintf(res, 100* sizeof(char),"FINGER %u @ %u:%s", m->node_id, m->node_port, buf); break;
-        case F_ACK: snprintf(res, 100* sizeof(char),"F_ACK %u @ %u:%s", m->node_id, m->node_port, buf); break;
+        case LOOKUP: snprintf(res, 100* sizeof(char), "%12s%10u @ %u:%s\tH: %10u","LOOKUP", m->node_id, m->node_port, buf, m->hash_id); break;
+        case REPLY: snprintf(res, 100* sizeof(char),"%12s%10u @ %u:%s\tH: %10u", "REPLY", m->node_id, m->node_port, buf, m->hash_id); break;
+        case JOIN: snprintf(res, 100* sizeof(char),"%12s%10u @ %u:%s","JOIN", m->node_id, m->node_port, buf); break;
+        case STABILIZE: snprintf(res, 100* sizeof(char),"%12s%10u @ %u:%s","STABILIZE", m->node_id, m->node_port, buf); break;
+        case NOTIFY: snprintf(res, 100* sizeof(char),"%12s%10u @ %u:%s","NOTIFY", m->node_id, m->node_port, buf); break;
+        case FINGER: snprintf(res, 100* sizeof(char),"%12s%10u @ %u:%s","FINGER", m->node_id, m->node_port, buf); break;
+        case F_ACK: snprintf(res, 100* sizeof(char),"%12s%10u @ %u:%s","F_ACK", m->node_id, m->node_port, buf); break;
         default: snprintf(res, 100* sizeof(char),"Unknown");
     }
 

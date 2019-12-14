@@ -147,7 +147,7 @@ void print_peer_info_long(peer_info* self){
 
     char buf[INET_ADDRSTRLEN];
     struct in_addr ip;
-    ip.s_addr = self->self_ip;
+    ip.s_addr = htonl(self->self_ip);
     inet_ntop(AF_INET, &ip, buf, INET_ADDRSTRLEN);
     printf("IP : %s\n", buf);
 
@@ -157,7 +157,7 @@ void print_peer_info_long(peer_info* self){
 
     char prev_buf[INET_ADDRSTRLEN];
     struct in_addr prev_ip;
-    prev_ip.s_addr = self->previous_ip;
+    prev_ip.s_addr = htonl(self->previous_ip);
     inet_ntop(AF_INET, &prev_ip, prev_buf, INET_ADDRSTRLEN);
     printf("prev IP : %s\n", prev_buf);
 
@@ -167,7 +167,8 @@ void print_peer_info_long(peer_info* self){
 
     char next_buf[INET_ADDRSTRLEN];
     struct in_addr next_ip;
-    next_ip.s_addr = self->next_ip;
+    next_ip.s_addr = htonl(self->next_ip);
+
     inet_ntop(AF_INET, &next_ip, next_buf, INET_ADDRSTRLEN);
     printf("next IP : %s\n", next_buf);
 
@@ -175,6 +176,12 @@ void print_peer_info_long(peer_info* self){
     printf("number of saved states : %d\n", listGetSize(self->states));
     fflush(stdout);
 
+}
+
+char *peer_info_to_str(peer_info *self){
+    char *res = calloc(100, sizeof(char));
+    snprintf(res, 100* sizeof(char), "%12s%10u @ %4u\tPREV:%10u @ %4u\tNEXT:%10u @ %4u","PEER INFO", self->self_id, self->self_port, self->previous_id, self->previous_port, self->next_id, self->next_port);
+    return res;
 }
 
 bool time_out(struct timeval *start){

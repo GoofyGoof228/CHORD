@@ -53,4 +53,8 @@ void free_ft(finger_table* ft);
 void print_ft(finger_table* ft);
 
 void print_ft_in_file(finger_table* ft);
+
+ft_entry* copy_entry(ft_entry* old);
+ft_entry* find_corresponding_peer(finger_table* ft, uint16_t hash_id);
+ft_entry* get_last_entry(finger_table* ft);
 #endif //BLOCK5_FINGER_TABLE_H

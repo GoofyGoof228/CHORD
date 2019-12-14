@@ -55,6 +55,8 @@ void print_peer_info_short(peer_info* self);
 
 void print_peer_info_long(peer_info* self);
 
+char *peer_info_to_str(peer_info *self);
+
 message* get_saved_state(list* states, uint16_t hash_id, const int type);
 
 message* pop_saved_state(list* states, uint16_t hash_id, const int type);

@@ -22,10 +22,6 @@ class Logger:
 		# TODO: This is may not clean folder creation: Better use abspath
 		if not os.path.exists("logs"):
 			os.makedirs("logs")
-
-		handler = logging.FileHandler("logs"+os.path.sep+name)
-		handler.setFormatter(formatter)
-
 		self.logger = logging.getLogger(name)
 		self.logger.setLevel(level)
 		self.logger.addHandler(handler)
@@ -320,3 +316,4 @@ if __name__ == '__main__':
 	else:
 		print("PLEASE RUN THIS CODE ON LINUX")
 		unittest.main()
+
