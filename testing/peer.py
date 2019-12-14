@@ -72,7 +72,7 @@ class Tests(unittest.TestCase):
 	def thread_function(self, cmd, thread_identifier, out_logger, err_logger):
 
 		#if self.port_in_use(str(cmd[1]),int(cmd[2]),err_logger):
-			#print("ADDRESS ALREADY IN USE: This is may an issue if a client is started!")
+		#print("ADDRESS ALREADY IN USE: This is may an issue if a client is started!")
 
 		# start the subprocess
 		process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,shell=True,universal_newlines=True)
@@ -146,7 +146,7 @@ class Tests(unittest.TestCase):
 			self.cmd_lst.append(['../'+self.abs_build_folder+'/peer', str(self.ip), str(int(self.portrange[i])), str(int(choosenid)), str(dst_peer[0]), str(dst_peer[1])])
 			self.running_peers_lst.append([str(self.ip), str(int(self.portrange[i]))])
 
-		#print(self.running_peers_lst)
+	#print(self.running_peers_lst)
 
 	def test_start_peer(self):
 		self.test_init_peers()
@@ -171,7 +171,7 @@ class Tests(unittest.TestCase):
 
 			time.sleep(0.5) # some time to make sure the peer is started
 
-			#x.join() is missing cause there is more code coming and the peers are not allowed to shut down
+		#x.join() is missing cause there is more code coming and the peers are not allowed to shut down
 
 	def get_keys_and_data_path(self,path,folder):
 		file_list = []
@@ -286,7 +286,7 @@ class Tests(unittest.TestCase):
 			peer = random.choice(peer_box)
 			self.cmd_clients.append(self.setter_client_with_random_key(peer[1]))
 			peer_box.remove(peer)
-			#print(peer_box)
+		#print(peer_box)
 		del peer_box
 
 	def test_start_clients_1(self):
@@ -308,7 +308,7 @@ class Tests(unittest.TestCase):
 			x = threading.Thread(target=self.thread_function, args=(" ".join(self.cmd_clients[i]), str(i), logger_stdout, logger_stderr ))
 			x.start()
 			self.client_args_used.append([self.cmd_clients[i][4],self.cmd_clients[i][6]])
-			#time.sleep(0.5) # some time to make sure the peer can process the request
+		#time.sleep(0.5) # some time to make sure the peer can process the request
 
 
 		for k,i in enumerate(self.client_args_used):
@@ -332,4 +332,3 @@ if __name__ == '__main__':
 	else:
 		print("PLEASE RUN THIS CODE ON LINUX")
 		unittest.main()
-

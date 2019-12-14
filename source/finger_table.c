@@ -4,7 +4,7 @@
 
 #include "finger_table.h"
 #include <stdlib.h>
-//#include <math.h>
+#include <arpa/inet.h>
 #include <stdint.h>
 #include "peer_netw.h"
 #import <sys/socket.h>
@@ -14,6 +14,18 @@
 #define NUM_BITS_IN_HASH 16
 #define TEST
 
+//#define DG_FT
+void print_entry(ft_entry* fe){
+    if(fe == NULL){
+        fprintf(stderr,"entry == NULL");
+        return;
+    }
+    char buf[INET_ADDRSTRLEN];
+    struct in_addr ip;
+    ip.s_addr = fe->ip;
+    inet_ntop(AF_INET, &ip, buf, INET_ADDRSTRLEN);
+    printf("id: %d\t\t\tip: %s\t\t\tport: %d\n", fe->id, buf, fe->port);
+}
 
 uint32_t powi(uint16_t base, uint16_t exp){
     if(exp == 0) return 1;
@@ -54,6 +66,9 @@ void create_ft(peer_info* self, int socket){
     ft_new->socket_asked_to_dew_it = socket;
 }
 void init_fill_ft(peer_info* self){
+#ifdef DG_FT
+    printf("init fill ft\n");
+#endif
     finger_table* ft = self->ft;
     uint32_t max_val =  powi( 2, ft->m);
     for(int i = 0; i != ft->m; ++i){
@@ -71,8 +86,10 @@ void init_fill_ft(peer_info* self){
         }
         search_for_successor(start, self);
         message* in;
-        //recv_message(&in, )
     }
+#ifdef DG_FT
+    print_ft(ft);
+#endif
 }
 void refill_ft(peer_info* self){
     finger_table* ft = self->ft;
@@ -84,13 +101,16 @@ void refill_ft(peer_info* self){
 }
 
 void recieve_reply_ft(internal_message* lp, peer_info* self){
-    //TODO which flag should be set, to recongnise ft lookup answer ???
+#ifdef DG_FT
+    printf("recieve reply FT\n");
+    print_internal_message(lp);
+#endif
     int index = find_index(lp->hash_id, (finger_table*) self->ft);
     finger_table *ft = self->ft;
     ft->entries[index] = create_entry(lp->node_id, lp->node_ip, lp->node_port);
     if(ft_is_done(ft) && ((finger_table*)self->ft)->socket_asked_to_dew_it != -1){
         //case for commando-line
-        //TODO send ack
+        //TO DO send ack
         internal_message out;
         out.hash_id = ((finger_table*)self->ft)->n;
         out.node_id = self->self_id;
@@ -101,7 +121,7 @@ void recieve_reply_ft(internal_message* lp, peer_info* self){
     }
 }
 void search_for_successor(uint16_t id, peer_info* self){
-    //TODO send "look up"
+    //TO DO send "look up"
     internal_message* look_up = malloc(sizeof(internal_message));
     look_up->hash_id = id;
     look_up->node_id = self->self_id;
@@ -109,7 +129,7 @@ void search_for_successor(uint16_t id, peer_info* self){
     look_up->node_port = self->self_port;
     look_up->type = LOOKUP;
 
-    listPushBack(self->states, create_wrapper(look_up, INTERNAL_MES));
+    listPushBack(self->internal_states, look_up);
     int next_peer_sock = connect_to_peer(self->next_ip, self->next_port);
     send_internal_message(look_up, next_peer_sock);
     //free(look_up);
@@ -134,10 +154,10 @@ void print_ft(finger_table* ft){
         fprintf(stderr, "ft == NULL\n");
         return;
     }
-    printf("i     start[i]     ft[i]\n");
+    printf("i\t\t\tstart[i]\t\t\tft[i]\n");
     printf("-------------------------\n");
     for(int i = 0; i != ft->m; i++){
-        printf("%d    %d    ", i, ft->start_ids[i]);
+        printf("%d\t\t\t%d\t\t\t", i, ft->start_ids[i]);
         ft->entries[i] == NULL ? printf("NULL\n") : printf("%d\n", ft->entries[i]->id);
     }
 }

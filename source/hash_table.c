@@ -4,9 +4,8 @@
 #include <stdio.h>
 #include "hash_table.h"
 
-#ifndef TEST
 #define TEST
-#endif
+//#define H_DB
 payload* h_get(payload **head, uint8_t* key, uint16_t key_len){
 
     if(head == NULL){
@@ -19,9 +18,9 @@ payload* h_get(payload **head, uint8_t* key, uint16_t key_len){
     }
     payload*p;
     HASH_FIND(hh, *head, key, key_len, p);
-#ifdef TEST
+    #ifdef H_DB
     (p == NULL) ? printf("h_get() : Notfound %s\n", key) : printf("h_get() : found%s\n", key);
-#endif
+    #endif
     return (p != NULL) ? payload_deepcopy(p) : NULL;
 }
 
@@ -53,7 +52,7 @@ void h_set(payload **head, uint8_t* key, uint16_t key_len, uint8_t* value, uint3
             //fprintf(stderr, "Nullpointer exception at h_set : value");
             return;
         } else {
-            //TODO rewrite with empty value
+            //TO DO rewrite with empty value
             h_del(head, key, key_len);
             return;
         }
@@ -61,9 +60,9 @@ void h_set(payload **head, uint8_t* key, uint16_t key_len, uint8_t* value, uint3
     payload* p = NULL;
     HASH_FIND(hh, *head, key, key_len, p);
 
-#ifdef TEST
+    #ifdef H_DB
     (p == NULL) ? printf("h_set() : Notfound %s\n", key) : printf("h_set() : found%s\n", key);
-#endif
+    #endif
     if(p == NULL){
         p = create_payload(key, key_len, value, val_len);
         HASH_ADD_KEYPTR(hh, *head, p->key, p->key_len, p);
@@ -84,9 +83,9 @@ void h_del(payload** head, uint8_t *key, uint16_t key_len) {
     }
     payload* p;
     HASH_FIND(hh, *head, key, key_len, p);
-#ifdef TEST
+    #ifdef H_DB
     (p == NULL) ? printf("h_del() : Notfound %s\n", key) : printf("h_del() : found%s\n", key);
-#endif
+    #endif
     if(p == NULL){
         //fprintf(stderr, "key not found");
         return;

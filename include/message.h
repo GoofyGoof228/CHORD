@@ -15,7 +15,6 @@
  * */
 struct _message {
     bool internal;
-    //TODO add union
         external_message *ext_msg;
         internal_message *int_msg;
 
@@ -29,7 +28,6 @@ int recv_message(message *m, int sock);
 void free_message(message* old);
 
 message* create_wrapper(void* m, const int type);
-//TODO save meta message in list
 
 void print_message(message* m);
 

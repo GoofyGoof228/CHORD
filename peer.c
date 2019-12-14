@@ -18,6 +18,7 @@
 #include <string.h>
 #endif
 
+#define LOG_SN 0
 int main(int argc, char* argv[]){
     // Setup Peer Info
     peer_info self_info;
@@ -25,7 +26,8 @@ int main(int argc, char* argv[]){
     payload * response_socket_head = NULL;
     self_info.hash_head = &hash;
     self_info.response_sockets_head = &response_socket_head;
-    self_info.states = listCreate();
+    self_info.internal_states = listCreate();
+    self_info.external_states = listCreate();
 
     if(setup_peer_info(&self_info, argv, argc) == -1) {
             exit(EXIT_FAILURE);
@@ -156,7 +158,12 @@ int main(int argc, char* argv[]){
                     #ifdef TEST
                     if(m_in->int_msg != NULL){
                         //if(m_in->int_msg->type != STABILIZE){
+                        if(LOG_SN){
                             printf("R: %s\n", internal_message_to_str(m_in->int_msg));
+                        } else if (m_in->int_msg->type != NOTIFY && m_in->int_msg->type != STABILIZE && m_in->int_msg->type != JOIN){
+                            printf("R: %s\n", internal_message_to_str(m_in->int_msg));
+                        }
+
                             //print_message(m_in);
                         //}
                     }
@@ -173,7 +180,7 @@ int main(int argc, char* argv[]){
                         fscanf(stdin, "%s", command);
                         fflush(stdin);
                         if(strcmp(command, "ft") == 0){
-                            //TODO force to build ft
+                            //TO DO force to build ft
                             printf("build a finger table !\n");
                             create_ft(&self_info, -1);
                             init_fill_ft(&self_info);
