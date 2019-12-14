@@ -189,7 +189,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                         printf("Found entry\n");
                         print_entry(result);
                         #endif
-                            internal_message *reply = new_internal_message(REPLY, m_in->hash_id, result->id, result->ip, result->port); //create_reply(self, m_in->hash_id);
+                            internal_message *reply = new_internal_message(REPLY, m_in->hash_id, result->id, result->ip, result->port);
                             peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
                             if(send_internal_message(reply, peer_socket) == -1){
                                 fprintf(stderr, " Sending Reply\n");
@@ -206,10 +206,24 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                             printf("forwarding lookup to last entry\n");
                             print_entry(result);
                             #endif
+                            //TODO check not to senbd it urself
+                            if(result->id == self->self_id){
+                                internal_message *reply = new_internal_message(REPLY, m_in->hash_id, self->self_id, self->self_ip, self->self_port);
+                                peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
+                                if(send_internal_message(reply, peer_socket) == -1){
+                                    fprintf(stderr, " Sending Reply\n");
+                                    return -1;
+                                }
+                                close(peer_socket);
+                                free(reply);
+                                free(result);
+                                return 0;
+                            }
                             peer_socket = connect_to_peer(result->ip, result->port);
                             send_internal_message(m_in, peer_socket);
                             close(peer_socket);
                             free(result);
+                            return 0;
                         }
                     }
 
@@ -217,38 +231,38 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                     //TO DO do it in old manner
                     if (is_between(m_in->hash_id, self->self_id, self->next_id)) {
                         // send repl with info of next node
-                        internal_message *reply = new_internal_message(REPLY, m_in->hash_id, self->next_id, self->next_ip, self->next_port); //create_reply(self, m_in->hash_id);
+                        internal_message *reply = new_internal_message(REPLY, m_in->hash_id, self->next_id, self->next_ip, self->next_port);
                         peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
 
-                if(send_internal_message(reply, peer_socket) == -1){
-                    fprintf(stderr, " Sending Reply\n");
-                    return -1;
-                }
-                close(peer_socket);
-                free(reply);
-            }
-            else if (is_between(m_in->hash_id, self->previous_id, self->self_id)) {
-                // send repl with info of next node
-                internal_message *reply = new_internal_message(REPLY, m_in->hash_id, self->self_id, self->self_ip, self->self_port); //create_reply(self, m_in->hash_id);
-                peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
+                    if(send_internal_message(reply, peer_socket) == -1){
+                        fprintf(stderr, " Sending Reply\n");
+                        return -1;
+                    }
+                    close(peer_socket);
+                    free(reply);
+                    }else if(is_between(m_in->hash_id, self->previous_id, self->self_id)){
+                        //TODO also check me, for FT case
 
-                if(send_internal_message(reply, peer_socket) == -1){
-                    fprintf(stderr, " Sending Reply\n");
-                    return -1;
-                }
-                close(peer_socket);
-                free(reply);
-            }else {
+                        // send repl with info of me
+                        internal_message *reply = new_internal_message(REPLY, m_in->hash_id, self->previous_id, self->self_ip, self->self_port);
+                        peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
+
+                        if(send_internal_message(reply, peer_socket) == -1){
+                            fprintf(stderr, " Sending Reply\n");
+                            return -1;
+                        }
+                        close(peer_socket);
+                        free(reply);
+                    }else {
                         // send to next peer
                         peer_socket = connect_to_peer(self->next_ip, self->next_port);
-
                         if(send_internal_message(m_in, peer_socket) == -1){
                             fprintf(stderr, " Sending Lookup onwards\n");
                             return -1;
                         }
                         close(peer_socket);
                     }
-                    break;
+                    return 0;
                 }
 
 
@@ -257,11 +271,13 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
 
             //TODO kaka
             internal_message *state = pop_saved_state_int(self->internal_states, m_in->hash_id);
-            if(state != NULL && state->type == LOOKUP){
-                recieve_reply_ft(m_in, self);
-                free(state);
-                close(socket);
-                break;
+            if(state != NULL){
+                if(state->type == LOOKUP){
+                    recieve_reply_ft(m_in, self);
+                    free(state);
+                    close(socket);
+                    return 0;
+                }
             }
             /*if(state == NULL){
                 fprintf(stderr, "Error: No Saved Message to match REPLY with Hash ID: %u", m_in->hash_id);
@@ -280,7 +296,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                 h_set_p(self->response_sockets_head, p);
                 free_external_message(to_send);
                 free_payload(p);
-            break;
+            return 0;
         }
         case STABILIZE: {
             if (!self->initialised_previous) {
@@ -306,7 +322,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
                 return -1;
             }
             close(peer_socket);
-            break;
+            return 0;
 
         }
         case NOTIFY: {
@@ -449,6 +465,8 @@ int handle_external_message(external_message * m_ex, peer_info * self, int socke
             FD_CLR(socket, master);
             close(socket);
             return 0;
+        }else if(false){
+            //TODO also check if next node is the rigth one
         }
         // Send Lookup
         else{

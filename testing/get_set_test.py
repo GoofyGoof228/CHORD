@@ -14,7 +14,7 @@ start_port = 4000
 port = choose_num(start_port, start_port + peercount - 1)
 time_interval = 0.0
 
-to_do = command + ' ' + ip + ' ' + str(int(port)) + ' SET ' + ' data < data.txt'
+to_do = command + ' ' + ip + ' ' + str(int(port)) + ' SET ' + ' data < data/data.txt'
 print('\n' + to_do)
 os.system(to_do)
 
