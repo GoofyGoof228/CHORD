@@ -59,7 +59,7 @@ class Tests(unittest.TestCase):
 				while True:
 					output = pipe.readline().strip()
 					if (output == b'' or output == '') and process.poll() != None:
-						queue.put((pipe, "TERMINATING"))
+						queue.put((pipe, str(process)+" TERMINATING"))
 						break
 					if output and (output != '' or output == b''):
 						if not 'STABILIZE' in output:
@@ -75,7 +75,7 @@ class Tests(unittest.TestCase):
 			#print("ADDRESS ALREADY IN USE: This is may an issue if a client is started!")
 
 		# start the subprocess
-		process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+		process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,shell=True,universal_newlines=True)
 
 		# init a queue to save stdouts and stderrs
 		queue = Queue()
@@ -101,10 +101,12 @@ class Tests(unittest.TestCase):
 			if queue_element == None:
 				pass
 			# if process child terminated
-			if process.poll() != None:
+			if process.poll() != None and queue.qsize() == 0:
 				# wait that other threads (readers) terminate
 				stdout_thread.join()
 				stderr_thread.join()
+				err_logger.info("LOGGER TERMINATING")
+				out_logger.info("LOGGER TERMINATING")
 				break
 
 
@@ -162,11 +164,12 @@ class Tests(unittest.TestCase):
 			logger_stdout.info("Starting job "+str(i)+" with Peer ID"+str(self.cmd_lst[i][2]))
 			logger_stderr.info("Starting job "+str(i)+" with Peer ID"+str(self.cmd_lst[i][2]))
 
-			x = threading.Thread(target=self.thread_function, args=(self.cmd_lst[i], str(i), logger_stdout, logger_stderr ))
+
+			x = threading.Thread(target=self.thread_function, args=(" ".join(self.cmd_lst[i]), str(i), logger_stdout, logger_stderr ))
 			print(self.cmd_lst[i])
 			x.start()
 
-			time.sleep(0.3) # some time to make sure the peer is started
+			time.sleep(0.5) # some time to make sure the peer is started
 
 			#x.join() is missing cause there is more code coming and the peers are not allowed to shut down
 
@@ -249,6 +252,7 @@ class Tests(unittest.TestCase):
 
 		self.client_args_used = []
 
+	# useless function so far
 	def test_all_peers_running(self):
 		self.test_start_client()
 		self.test_start_peer()
@@ -266,7 +270,12 @@ class Tests(unittest.TestCase):
 	def test_unique_get_to_every_peer(self):
 		self.test_start_client()
 		self.test_start_peer()
-		time.sleep(8)
+
+		print("STARTING GET-FLOOD IN:")
+		for gamma in range(8,0,-1):
+			print(str(gamma)+'...')
+			time.sleep(1)
+
 		#self.running_peers_lst.append([str(self.ip), str(int(self.portrange[i]))])
 		peer_box = self.running_peers_lst.copy()
 
@@ -277,7 +286,7 @@ class Tests(unittest.TestCase):
 			peer = random.choice(peer_box)
 			self.cmd_clients.append(self.setter_client_with_random_key(peer[1]))
 			peer_box.remove(peer)
-			print(peer_box)
+			#print(peer_box)
 		del peer_box
 
 	def test_start_clients_1(self):
@@ -286,8 +295,8 @@ class Tests(unittest.TestCase):
 		for i in range(0,self.client_count):
 
 			# set name for logger- and filenamesyntax
-			filename_stderror = "CLIENT_ERR_"+str(i)+".txt"
-			filename_stdout   = "CLIENT_OUT_"+str(i)+".txt"
+			filename_stderror = "CLIENT_ERR_TO_"+str(self.cmd_clients[i][2])+".txt"
+			filename_stdout   = "CLIENT_OUT_TO_"+str(self.cmd_clients[i][2])+".txt"
 
 			# init loggers
 			logger_stdout = Logger(filename_stdout).logger
@@ -296,10 +305,11 @@ class Tests(unittest.TestCase):
 			#logger_stdout.info("Starting job "+str(i)+" with Peer ID"+str(self.cmd_lst[i][2]))
 			#logger_stderr.info("Starting job "+str(i)+" with Peer ID"+str(self.cmd_lst[i][2]))
 
-			x = threading.Thread(target=self.thread_function, args=(self.cmd_clients[i], str(i), logger_stdout, logger_stderr ))
+			x = threading.Thread(target=self.thread_function, args=(" ".join(self.cmd_clients[i]), str(i), logger_stdout, logger_stderr ))
 			x.start()
 			self.client_args_used.append([self.cmd_clients[i][4],self.cmd_clients[i][6]])
-			#time.sleep(0.2) # some time to make sure the peer is started
+			#time.sleep(0.5) # some time to make sure the peer can process the request
+
 
 		for k,i in enumerate(self.client_args_used):
 			print(self.cmd_clients[k])
