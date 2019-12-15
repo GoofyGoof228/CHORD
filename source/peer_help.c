@@ -7,9 +7,8 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 #include <sys/time.h>
-#ifndef TEST
 #define TEST
-#endif
+//#define DG_POP
 
 bool join_is_done(peer_info* self){
     return self->initialised_previous && self->initialised_next;
@@ -59,16 +58,12 @@ int setup_peer_info(peer_info * self, char *argv[], int argc){
 }
 
 
-internal_message* pop_saved_state_int(list* states, uint16_t hash_id){
+internal_message* pop_saved_state_int(list* states, uint16_t hash_id, internal_action type){
     //iterate over list and find right saved message
         listIterator* it = listIteratorCreate(states);
         internal_message* candidate = listIteratorGetCurrentElement(it);
-        if(candidate == NULL){
-            free(it);
-            return NULL;
-        }
-        while(it->current != NULL){
-            if(candidate->hash_id == hash_id){
+        while(candidate != NULL){
+            if(candidate->hash_id == hash_id &&  candidate->type == type){
                 //right message found
                 listIteratorRemoveCurrent(it, NULL);
                 break;
@@ -76,17 +71,17 @@ internal_message* pop_saved_state_int(list* states, uint16_t hash_id){
             candidate = listIteratorGetNextElement(it);
         }
         free(it);
+#ifdef DG_POP
+        printf("Poped state : \n");
+        print_internal_message(candidate);
+#endif
         return candidate;
 }
 external_message* pop_saved_state_ext(list* states, uint16_t hash_id){
     //iterate over list and find right saved message
     listIterator* it = listIteratorCreate(states);
     external_message* candidate = listIteratorGetCurrentElement(it);
-    if(candidate == NULL){
-        free(it);
-        return NULL;
-    }
-    while(it->current != NULL){
+    while(candidate != NULL){
         uint16_t candidate_id = get_hash_id(candidate->data->key, candidate->data->key_len);
         if(candidate_id == hash_id){
             //right message found

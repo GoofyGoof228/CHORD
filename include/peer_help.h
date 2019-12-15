@@ -11,6 +11,7 @@
 #include "internal_message.h"
 #include "external_message.h"
 #include "message.h"
+#include <sys/select.h>
 //#include "finger_table.h"
 /**
  * must be filled at start up
@@ -44,6 +45,8 @@ struct _peer_info{
     list* external_states;
     void* ft;
 
+    fd_set* connection_storage;
+
 };
 typedef struct _peer_info peer_info;
 
@@ -59,9 +62,7 @@ void print_peer_info_long(peer_info* self);
 
 char *peer_info_to_str(peer_info *self);
 
-message* get_saved_state(list* states, uint16_t hash_id, const int type);
-
-internal_message* pop_saved_state_int(list* states, uint16_t hash_id);
+internal_message* pop_saved_state_int(list* states, uint16_t hash_id, internal_action type);
 
 external_message* pop_saved_state_ext(list* states, uint16_t hash_id);
 

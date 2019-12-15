@@ -9,14 +9,17 @@
 #include <errno.h>
 #include <ctype.h>
 #include "finger_table.h"
+#include <sys/select.h>
 #define TEST
 #define COMMAND_LEN 15
 #define GETSOCKETERRNO() (errno)
 #define SOCKET int
-
+//#define FT_KEEP_ALIVE
 #ifdef TEST
 #include <string.h>
 #endif
+
+#define FT_M
 
 #define LOG_SN 0
 int main(int argc, char* argv[]){
@@ -83,7 +86,7 @@ int main(int argc, char* argv[]){
     }
 
     time_t last_stab_time = time(NULL);
-
+    self_info.connection_storage = &connections_storage;
     while(running) {
         // copy FD set
         fd_set in_fd = connections_storage;
@@ -181,9 +184,11 @@ int main(int argc, char* argv[]){
                         fflush(stdin);
                         if(strcmp(command, "ft") == 0){
                             //TO DO force to build ft
-                            printf("build a finger table !\n");
-                            create_ft(&self_info, -1);
-                            init_fill_ft(&self_info);
+                            internal_message* ft = new_internal_message(FINGER, self_info.self_id, self_info.self_id, self_info.self_ip, self_info.self_port);
+                            SOCKET peer_socket = connect_to_peer(self_info.self_ip, self_info.self_port);
+                            send_internal_message(ft, peer_socket);
+                            close(peer_socket);
+                            free(ft);
                         }
                         if(strcmp(command, "fl") == 0){
                             //print FT in file

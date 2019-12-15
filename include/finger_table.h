@@ -24,7 +24,6 @@ struct _finger_table{
     uint16_t* start_ids;
     ft_entry **entries;
     bool filled;
-    int socket_asked_to_dew_it;     //fuck
 
 };
 typedef struct _finger_table finger_table;
@@ -42,13 +41,13 @@ uint16_t find_index(uint16_t id, finger_table* ft);
 
 ft_entry* create_entry(uint16_t id, uint32_t ip, uint16_t port);
 
-void create_ft(peer_info* self, int socket);
+void create_ft(peer_info* self);
 
 void init_fill_ft(peer_info* self);
 
 void recieve_reply_ft(internal_message* lp, peer_info* self);
 
-void refill_ft(peer_info* self);
+void send_ack(peer_info* self);
 
 void search_for_successor(uint16_t id, peer_info* self);
 

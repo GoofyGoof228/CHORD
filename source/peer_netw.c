@@ -14,8 +14,9 @@
 
 #define TEST
 #define LOG_SN 0
-
-#define DG_FT
+//#define FT_M
+//#define DG_FT
+//#define FT_KEEP_ALIVE
 uint32_t get_ipv4_addr(char *name){
     int status;
     struct addrinfo hints;
@@ -253,14 +254,12 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
         case REPLY: {
 
             //TODO kaka
-            internal_message *state = pop_saved_state_int(self->internal_states, m_in->hash_id);
+            internal_message *state = pop_saved_state_int(self->internal_states, m_in->hash_id, LOOKUP);
             if(state != NULL){
-                if(state->type == LOOKUP){
                     recieve_reply_ft(m_in, self);
                     free(state);
                     close(socket);
                     return 0;
-                }
             }
             /*if(state == NULL){
                 fprintf(stderr, "Error: No Saved Message to match REPLY with Hash ID: %u", m_in->hash_id);
@@ -386,18 +385,25 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
             break;
         }
         case F_ACK: {
-            #ifdef TEST
-                printf("I: %s\n", peer_info_to_str(self));
-            #endif
-            fprintf(stderr, "F_Ack: Not implemented\n");
-            return -1;
+        #ifdef FT_M
+        printf("Finger table was succesfully built by peer with id %d\n", m_in->node_id);
+        #endif
+            close(peer_socket);
+            return 0;
             break;
 
         }
         case FINGER: {
-            create_ft(self, socket);
+        #ifdef DG_FT
+         printf("saved FINGER message\n");
+         print_internal_message(m_in);
+        #endif
+            internal_message* to_save = copy_int_message(m_in);
+            listPushBack(self->internal_states, to_save);
+            if(self->ft != NULL) free_ft(self->ft);
+            create_ft(self);
             init_fill_ft(self);
-            break;
+            return 0;
 
         }
         default: {

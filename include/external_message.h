@@ -16,6 +16,7 @@
  * enum to identify command
  * */
 enum external_action  {NOT_DEFINED, GET , SET, DELETE};
+typedef enum external_action external_action;
 struct _external_message{
     enum external_action type;
     bool ack;

@@ -33,4 +33,5 @@ void print_internal_message(internal_message* m);
 
 char * internal_message_to_str(internal_message *m);
 
+internal_message* copy_int_message(internal_message* old);
 #endif //BLOCK4_INTERNAL_MESSAGE_H
