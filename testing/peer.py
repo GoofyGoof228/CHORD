@@ -22,10 +22,14 @@ class Logger:
 		# TODO: This is may not clean folder creation: Better use abspath
 		if not os.path.exists("logs"):
 			os.makedirs("logs")
+
+		handler = logging.FileHandler("logs"+os.path.sep+name)
+		handler.setFormatter(formatter)
+
 		self.logger = logging.getLogger(name)
 		self.logger.setLevel(level)
 		self.logger.addHandler(handler)
-		self.info("Searching for pen and paper... Let's move it!")
+		self.info("New Session started!")
 
 	def info(self, line):
 		self.logger.info(line)
@@ -53,20 +57,22 @@ class Tests(unittest.TestCase):
 			print("Starting std thread"+str(pipe))
 			with pipe:
 				while True:
-					output = pipe.readline()
+					output = pipe.readline().strip()
 					if (output == b'' or output == '') and process.poll() != None:
 						queue.put((pipe, "TERMINATING"))
 						break
-					if output:
-
-						queue.put((pipe, output))
+					if output and (output != '' or output == b''):
+						if not 'STABILIZE' in output:
+							if not 'JOIN' in output:
+								if not 'NOTIFY' in output:
+									queue.put((pipe, output))
 		finally:
 			queue.put((None,None))
 
 	def thread_function(self, cmd, thread_identifier, out_logger, err_logger):
 
-		if self.port_in_use(str(cmd[1]),int(cmd[2]),err_logger):
-			print("ADDRESS ALREADY IN USE: This is may an issue if a client is started!")
+		#if self.port_in_use(str(cmd[1]),int(cmd[2]),err_logger):
+			#print("ADDRESS ALREADY IN USE: This is may an issue if a client is started!")
 
 		# start the subprocess
 		process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
@@ -111,7 +117,7 @@ class Tests(unittest.TestCase):
 		self.ip = '127.0.0.1'
 
 		self.peercount = 10
-		startport = 4000
+		startport = 4100
 		self.portrange = np.linspace(startport, startport+self.peercount-1, self.peercount)
 
 
@@ -146,8 +152,8 @@ class Tests(unittest.TestCase):
 		for i in range(0,self.peercount):
 
 			# set name for logger- and filenamesyntax
-			filename_stderror = "PEER_ERR_"+str(i)+".txt"
-			filename_stdout   = "PEER_OUT_"+str(i)+".txt"
+			filename_stderror = "PEER_ERR_"+str(self.cmd_lst[i][2])+".txt"
+			filename_stdout   = "PEER_OUT_"+str(self.cmd_lst[i][2])+".txt"
 
 			# init loggers
 			logger_stdout = Logger(filename_stdout).logger
@@ -160,7 +166,7 @@ class Tests(unittest.TestCase):
 			print(self.cmd_lst[i])
 			x.start()
 
-			time.sleep(0.2) # some time to make sure the peer is started
+			time.sleep(0.3) # some time to make sure the peer is started
 
 			#x.join() is missing cause there is more code coming and the peers are not allowed to shut down
 
@@ -260,7 +266,7 @@ class Tests(unittest.TestCase):
 	def test_unique_get_to_every_peer(self):
 		self.test_start_client()
 		self.test_start_peer()
-		time.sleep(5)
+		time.sleep(8)
 		#self.running_peers_lst.append([str(self.ip), str(int(self.portrange[i]))])
 		peer_box = self.running_peers_lst.copy()
 
