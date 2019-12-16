@@ -16,7 +16,6 @@
 #define LOG_SN 0
 //#define FT_M
 //#define DG_FT
-#define FT_KEEP_ALIVE
 #define SOCK_OUT
 void close_socket(SOCKET socket){
     if(socket != -1){
@@ -421,7 +420,6 @@ int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET so
             //??? close_socket(socket);
         #endif
         #ifdef FT_KEEP_ALIVE
-            //FD_SET(socket, master);
             if(self->ft != NULL) free_ft(self->ft);
             create_ft(self, socket);
             init_fill_ft(self);
@@ -564,9 +562,16 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
 
     if(in->int_msg != NULL){
 
+        #ifdef FT_KEEP_ALIVE
+        if(in->int_msg->type != FINGER){
+            close_socket(socket);
+            FD_CLR(socket, master);
+        }
+        #endif
+        #ifndef FT_KEEP_ALIVE
         close_socket(socket);
         FD_CLR(socket, master);
-
+        #endif
         internal_message* m_in = in->int_msg;
 
         res = handle_internal_message(m_in, self, socket, master);

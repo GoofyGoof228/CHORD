@@ -86,9 +86,9 @@ int main(int argc, char* argv[]){
     }
 
     time_t last_stab_time = time(NULL);
-    //self_info.connection_storage = &connections_storage;
     while(running) {
         // copy FD set
+        self_info.connection_storage = &connections_storage;
         fd_set in_fd = connections_storage;
 
         if (select(max_socket+1, &in_fd, NULL, NULL, &time_out) == -1) {
@@ -198,9 +198,6 @@ int main(int argc, char* argv[]){
                             send_internal_message(ft, peer_socket);
                             free(ft);
                             FD_SET(peer_socket, &connections_storage);
-                            if (peer_socket > max_socket){
-                                max_socket = peer_socket;
-                            }
                             #endif
                         }
                         if(strcmp(command, "fl") == 0){

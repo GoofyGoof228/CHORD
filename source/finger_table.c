@@ -15,7 +15,6 @@
 #define TEST
 #define SOCKET int
 //#define DG_FT
-#define FT_KEEP_ALIVE
 #define SOCKET int
 void print_entry(ft_entry* fe){
     if(fe == NULL){
@@ -54,11 +53,12 @@ void send_ack(peer_info* self){
             return;
         }
         SOCKET peer_socket = connect_to_peer(response->node_ip, response->node_port);
-        send_internal_message(&out, peer_socket);
+        send_internal_message(out, peer_socket);
         close_socket(peer_socket);
+        free(out);
         #endif
         #ifdef FT_KEEP_ALIVE
-        SOCKET peer_socket = ( ((finger_table*)(self->ft))->peer_who_asked_to_dew_it );
+        SOCKET peer_socket = ((finger_table*)(self->ft))->peer_who_asked_to_dew_it;
         if(send_internal_message(out, peer_socket) == -1){
             fprintf(stderr, "send_ack : failed to send internal message\n");
             return;
@@ -110,6 +110,7 @@ void init_fill_ft(peer_info* self){
             ft->entries[i] = create_entry(self->self_id, self->self_ip, self->self_port);
             if(ft_is_done(ft)){
                 send_ack(self);
+                FD_CLR(((finger_table*)(self->ft))->peer_who_asked_to_dew_it, self->connection_storage);
                 return;
             }
             continue;
@@ -118,6 +119,7 @@ void init_fill_ft(peer_info* self){
             ft->entries[i] = create_entry(self->next_id, self->next_ip, self->next_port);
             if(ft_is_done(ft)){
                 send_ack(self);
+                FD_CLR(((finger_table*)(self->ft))->peer_who_asked_to_dew_it, self->connection_storage);
                 return;
             }
             continue;
@@ -135,7 +137,10 @@ void recieve_reply_ft(internal_message* lp, peer_info* self){
     int index = find_index(lp->hash_id, (finger_table*) self->ft);
     finger_table *ft = self->ft;
     ft->entries[index] = create_entry(lp->node_id, lp->node_ip, lp->node_port);
-    if(ft_is_done(ft))send_ack(self);
+    if(ft_is_done(ft)){
+        send_ack(self);
+        FD_CLR(((finger_table*)(self->ft))->peer_who_asked_to_dew_it, self->connection_storage);
+    }
 }
 void search_for_successor(uint16_t id, peer_info* self){
     //TO DO send "look up"
