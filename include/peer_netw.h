@@ -9,7 +9,7 @@
 #include "message.h"
 #include "list.h"
 #include "peer_help.h"
-#define FT_KEEP_ALIVE
+//define FT_KEEP_ALIVE
 #define TEST
 #define SOCKET int
 uint32_t get_ipv4_addr(char *name);

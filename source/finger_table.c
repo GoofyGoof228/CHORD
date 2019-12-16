@@ -110,7 +110,9 @@ void init_fill_ft(peer_info* self){
             ft->entries[i] = create_entry(self->self_id, self->self_ip, self->self_port);
             if(ft_is_done(ft)){
                 send_ack(self);
+                #ifdef FT_KEEP_ALIVE
                 FD_CLR(((finger_table*)(self->ft))->peer_who_asked_to_dew_it, self->connection_storage);
+                #endif
                 return;
             }
             continue;
@@ -119,7 +121,9 @@ void init_fill_ft(peer_info* self){
             ft->entries[i] = create_entry(self->next_id, self->next_ip, self->next_port);
             if(ft_is_done(ft)){
                 send_ack(self);
+#ifdef FT_KEEP_ALIVE
                 FD_CLR(((finger_table*)(self->ft))->peer_who_asked_to_dew_it, self->connection_storage);
+#endif
                 return;
             }
             continue;
@@ -139,7 +143,9 @@ void recieve_reply_ft(internal_message* lp, peer_info* self){
     ft->entries[index] = create_entry(lp->node_id, lp->node_ip, lp->node_port);
     if(ft_is_done(ft)){
         send_ack(self);
+#ifdef FT_KEEP_ALIVE
         FD_CLR(((finger_table*)(self->ft))->peer_who_asked_to_dew_it, self->connection_storage);
+#endif
     }
 }
 void search_for_successor(uint16_t id, peer_info* self){
