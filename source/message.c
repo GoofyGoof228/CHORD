@@ -6,9 +6,7 @@
 #include <sys/socket.h>
 #include <stdint.h>
 #include "message.h"
-#ifndef TEST
 #define TEST
-#endif
 bool is_internal(uint8_t byte){
 
     uint8_t control = byte & (uint8_t) 0x80;

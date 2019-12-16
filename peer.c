@@ -9,16 +9,19 @@
 #include <errno.h>
 #include <ctype.h>
 #include "finger_table.h"
+#include <sys/select.h>
 #define TEST
 #define COMMAND_LEN 15
 #define GETSOCKETERRNO() (errno)
 #define SOCKET int
-
+#define FT_KEEP_ALIVE
 #ifdef TEST
 #include <string.h>
 #endif
-
+#define FT_M
 #define LOG_SN 0
+
+
 int main(int argc, char* argv[]){
     // Setup Peer Info
     peer_info self_info;
@@ -28,13 +31,15 @@ int main(int argc, char* argv[]){
     self_info.response_sockets_head = &response_socket_head;
     self_info.internal_states = listCreate();
     self_info.external_states = listCreate();
-
+    self_info.ft = NULL;
     if(setup_peer_info(&self_info, argv, argc) == -1) {
             exit(EXIT_FAILURE);
     }
     #ifdef TEST
         //print_peer_info_long(&self_info);
-        printf("I: %s\n", peer_info_to_str(&self_info));
+        char* peer_info = peer_info_to_str(&self_info);
+        printf("I: %s\n", peer_info);
+        free(peer_info);
     #endif
 
     // setup connection
@@ -79,13 +84,13 @@ int main(int argc, char* argv[]){
             fprintf(stderr, " Sending Join to Entry Node\n");
             exit(EXIT_FAILURE);
         }
-        close(peer_sock);
+        close_socket(peer_sock);
     }
 
     time_t last_stab_time = time(NULL);
-
     while(running) {
         // copy FD set
+        self_info.connection_storage = &connections_storage;
         fd_set in_fd = connections_storage;
 
         if (select(max_socket+1, &in_fd, NULL, NULL, &time_out) == -1) {
@@ -107,7 +112,8 @@ int main(int argc, char* argv[]){
                     fprintf(stderr, "Error Sending Stabalize\n");
                     exit(EXIT_FAILURE);
                 }
-                close(peer_sock);
+                free(stabalize);
+                close_socket(peer_sock);
             }
             last_stab_time = time(NULL);
             continue;
@@ -152,7 +158,7 @@ int main(int argc, char* argv[]){
                     // Receive and Decode Message
                     if(recv_message(m_in, i) == -1) {
                         FD_CLR(i, &connections_storage);
-                        close(i);
+                        close_socket(i);
                         continue;
                     }
                     #ifdef TEST
@@ -161,7 +167,9 @@ int main(int argc, char* argv[]){
                         if(LOG_SN){
                             printf("R: %s\n", internal_message_to_str(m_in->int_msg));
                         } else if (m_in->int_msg->type != NOTIFY && m_in->int_msg->type != STABILIZE && m_in->int_msg->type != JOIN){
-                            printf("R: %s\n", internal_message_to_str(m_in->int_msg));
+                            char* int_mes = internal_message_to_str(m_in->int_msg);
+                            printf("R: %s\n", int_mes);
+                            free(int_mes);
                         }
 
                             //print_message(m_in);
@@ -170,6 +178,7 @@ int main(int argc, char* argv[]){
                     fflush(stdout);
                     fflush(stdin);
                     #endif
+
                     react_on_incoming_message(m_in, &self_info, i, &connections_storage);
                     //message is being freed in reac_on bla bla
                     //free_message(m_in);
@@ -181,9 +190,20 @@ int main(int argc, char* argv[]){
                         fflush(stdin);
                         if(strcmp(command, "ft") == 0){
                             //TO DO force to build ft
-                            printf("build a finger table !\n");
-                            create_ft(&self_info, -1);
-                            init_fill_ft(&self_info);
+                            #ifndef FT_KEEP_ALIVE
+                            internal_message* ft = new_internal_message(FINGER, self_info.self_id, self_info.self_id, self_info.self_ip, self_info.self_port);
+                            SOCKET peer_socket = connect_to_peer(self_info.self_ip, self_info.self_port);
+                            send_internal_message(ft, peer_socket);
+                            close_socket(peer_socket);
+                            free(ft);
+                            #endif
+                            #ifdef FT_KEEP_ALIVE
+                            internal_message* ft = new_internal_message(FINGER, 0, 0, 0, 0);
+                            SOCKET peer_socket = connect_to_peer(self_info.self_ip, self_info.self_port);
+                            send_internal_message(ft, peer_socket);
+                            free(ft);
+                            FD_SET(peer_socket, &connections_storage);
+                            #endif
                         }
                         if(strcmp(command, "fl") == 0){
                             //print FT in file

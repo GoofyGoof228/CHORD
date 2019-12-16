@@ -13,8 +13,9 @@
 #include <string.h>
 #define NUM_BITS_IN_HASH 16
 #define TEST
-
+#define SOCKET int
 //#define DG_FT
+#define SOCKET int
 void print_entry(ft_entry* fe){
     if(fe == NULL){
         fprintf(stderr,"entry == NULL");
@@ -37,6 +38,36 @@ uint16_t find_index(uint16_t id, finger_table* ft){
     }
     return -1;
 }
+void send_ack(peer_info* self){
+        //case for commando-line
+        //TO DO send ack
+        internal_message *out = new_internal_message(F_ACK, self->self_id, self->self_id, self->self_ip, self->self_port);
+
+        #ifdef DG_FT
+        printf("triyng to find FINEGER message with id %d\n", self->self_id);
+        #endif
+        #ifndef FT_KEEP_ALIVE
+        internal_message* response = pop_saved_state_int(self->internal_states, self->self_id);
+        if(response == NULL){
+            fprintf(stderr, "No incoming FINGER message was found\n");
+            return;
+        }
+        SOCKET peer_socket = connect_to_peer(response->node_ip, response->node_port);
+        send_internal_message(out, peer_socket);
+        close_socket(peer_socket);
+        free(out);
+        free(response);
+        #endif
+        #ifdef FT_KEEP_ALIVE
+        SOCKET peer_socket = ((finger_table*)(self->ft))->peer_who_asked_to_dew_it;
+        if(send_internal_message(out, peer_socket) == -1){
+            fprintf(stderr, "send_ack : failed to send internal message\n");
+            return;
+        }
+        free(out);
+        close_socket(peer_socket);
+        #endif
+}
 bool ft_is_done(finger_table* ft){
     for(int i = 0; i != ft->m; ++i){
         if(ft->entries[i] == NULL){
@@ -54,7 +85,7 @@ ft_entry* create_entry(uint16_t id, uint32_t ip, uint16_t port){
     new->port = port;
     return new;
 }
-void create_ft(peer_info* self, int socket){
+void create_ft(peer_info* self, SOCKET asked){
     finger_table* ft_new = malloc(sizeof(finger_table));
     ft_new->m = NUM_BITS_IN_HASH;
     ft_new->n = self->self_id;
@@ -63,7 +94,9 @@ void create_ft(peer_info* self, int socket){
     for(int i = 0; i!= NUM_BITS_IN_HASH; ++i)ft_new->entries[i] = NULL;
     ft_new->filled = false;
     self->ft = ft_new;
-    ft_new->socket_asked_to_dew_it = socket;
+    #ifdef FT_KEEP_ALIVE
+    ft_new->peer_who_asked_to_dew_it = asked;
+    #endif
 }
 void init_fill_ft(peer_info* self){
 #ifdef DG_FT
@@ -76,28 +109,29 @@ void init_fill_ft(peer_info* self){
         ft->start_ids[i] = start;
         if(is_between(ft->start_ids[i], self->previous_id, self->self_id)){
             ft->entries[i] = create_entry(self->self_id, self->self_ip, self->self_port);
-            if(ft_is_done(ft))return;
+            if(ft_is_done(ft)){
+                send_ack(self);
+                #ifdef FT_KEEP_ALIVE
+                FD_CLR(((finger_table*)(self->ft))->peer_who_asked_to_dew_it, self->connection_storage);
+                #endif
+                return;
+            }
             continue;
         }
         if(is_between(ft->start_ids[i], self->self_id, self->next_id)){
             ft->entries[i] = create_entry(self->next_id, self->next_ip, self->next_port);
-            if(ft_is_done(ft))return;
+            if(ft_is_done(ft)){
+                send_ack(self);
+#ifdef FT_KEEP_ALIVE
+                FD_CLR(((finger_table*)(self->ft))->peer_who_asked_to_dew_it, self->connection_storage);
+#endif
+                return;
+            }
             continue;
         }
         search_for_successor(start, self);
         message* in;
     }
-#ifdef DG_FT
-    print_ft(ft);
-#endif
-}
-void refill_ft(peer_info* self){
-    finger_table* ft = self->ft;
-
-    for(int i = 0; i != ft->m; i++){
-        free(ft->entries[i]);
-    }
-    //fill_ft(self);
 }
 
 void recieve_reply_ft(internal_message* lp, peer_info* self){
@@ -108,20 +142,18 @@ void recieve_reply_ft(internal_message* lp, peer_info* self){
     int index = find_index(lp->hash_id, (finger_table*) self->ft);
     finger_table *ft = self->ft;
     ft->entries[index] = create_entry(lp->node_id, lp->node_ip, lp->node_port);
-    if(ft_is_done(ft) && ((finger_table*)self->ft)->socket_asked_to_dew_it != -1){
-        //case for commando-line
-        //TO DO send ack
-        internal_message out;
-        out.hash_id = ((finger_table*)self->ft)->n;
-        out.node_id = self->self_id;
-        out.node_ip = self->self_ip;
-        out.node_port = self->self_port;
-        send_internal_message(&out, ((finger_table*)self->ft)->socket_asked_to_dew_it);
-        close(((finger_table*)self->ft)->socket_asked_to_dew_it);
+    if(ft_is_done(ft)){
+        send_ack(self);
+#ifdef FT_KEEP_ALIVE
+        FD_CLR(((finger_table*)(self->ft))->peer_who_asked_to_dew_it, self->connection_storage);
+#endif
     }
 }
 void search_for_successor(uint16_t id, peer_info* self){
     //TO DO send "look up"
+#ifdef DG_FT
+    printf("search for successor\n");
+#endif
     internal_message* look_up = malloc(sizeof(internal_message));
     look_up->hash_id = id;
     look_up->node_id = self->self_id;
@@ -133,7 +165,7 @@ void search_for_successor(uint16_t id, peer_info* self){
     int next_peer_sock = connect_to_peer(self->next_ip, self->next_port);
     send_internal_message(look_up, next_peer_sock);
     //free(look_up);
-    close(next_peer_sock);
+    close_socket(next_peer_sock);
     //return next_peer_sock;
 
 }
