@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include "peer_help.h"
 //#include "peer_netw.h"
-//#define FT_KEEP_ALIVE
+#define FT_KEEP_ALIVE
 #define SOCKET int
 struct _ft_entry{
     uint16_t id;

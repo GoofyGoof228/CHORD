@@ -31,13 +31,15 @@ int main(int argc, char* argv[]){
     self_info.response_sockets_head = &response_socket_head;
     self_info.internal_states = listCreate();
     self_info.external_states = listCreate();
-
+    self_info.ft = NULL;
     if(setup_peer_info(&self_info, argv, argc) == -1) {
             exit(EXIT_FAILURE);
     }
     #ifdef TEST
         //print_peer_info_long(&self_info);
-        printf("I: %s\n", peer_info_to_str(&self_info));
+        char* peer_info = peer_info_to_str(&self_info);
+        printf("I: %s\n", peer_info);
+        free(peer_info);
     #endif
 
     // setup connection
@@ -110,6 +112,7 @@ int main(int argc, char* argv[]){
                     fprintf(stderr, "Error Sending Stabalize\n");
                     exit(EXIT_FAILURE);
                 }
+                free(stabalize);
                 close_socket(peer_sock);
             }
             last_stab_time = time(NULL);
@@ -164,7 +167,9 @@ int main(int argc, char* argv[]){
                         if(LOG_SN){
                             printf("R: %s\n", internal_message_to_str(m_in->int_msg));
                         } else if (m_in->int_msg->type != NOTIFY && m_in->int_msg->type != STABILIZE && m_in->int_msg->type != JOIN){
-                            printf("R: %s\n", internal_message_to_str(m_in->int_msg));
+                            char* int_mes = internal_message_to_str(m_in->int_msg);
+                            printf("R: %s\n", int_mes);
+                            free(int_mes);
                         }
 
                             //print_message(m_in);

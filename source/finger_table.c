@@ -56,6 +56,7 @@ void send_ack(peer_info* self){
         send_internal_message(out, peer_socket);
         close_socket(peer_socket);
         free(out);
+        free(response);
         #endif
         #ifdef FT_KEEP_ALIVE
         SOCKET peer_socket = ((finger_table*)(self->ft))->peer_who_asked_to_dew_it;

@@ -314,6 +314,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET so
                 fprintf(stderr, " Sending Notify after Stabalize\n");
                 return -1;
             }
+            free(out);
             close_socket(peer_socket);
             return 0;
 
@@ -326,7 +327,9 @@ int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET so
                     #ifdef TEST
                         //printf("before NOTIFY\n");
                         //print_peer_info_long(self);
-                        printf("BN:%s\n", peer_info_to_str(self));
+                        char* peer_info1 = peer_info_to_str(self);
+                        printf("BN:%s\n", peer_info1);
+                        free(peer_info1);
                     #endif
                     self->next_id = m_in->node_id;
                     self->next_ip = m_in->node_ip;
@@ -334,7 +337,10 @@ int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET so
                     #ifdef TEST
                         //printf("after NOTIFY\n");
                         //print_peer_info_long(self);
-                        printf("AN:%s\n", peer_info_to_str(self));
+                        char* peer_info = peer_info_to_str(self);
+                        printf("AN:%s\n", peer_info);
+                        free(peer_info);
+
                     #endif
                 }
             }
@@ -344,7 +350,9 @@ int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET so
                 #ifdef TEST
                     //printf("before NOTIFY\n");
                     //print_peer_info_long(self);
-                    printf("BJ:%s\n", peer_info_to_str(self));
+                    char* peer_info = peer_info_to_str(self);
+                    printf("BJ:%s\n", peer_info);
+                    free(peer_info);
                 #endif
                 self->next_id = m_in->node_id;
                 self->next_ip = m_in->node_ip;
@@ -353,7 +361,9 @@ int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET so
                 #ifdef TEST
                     //printf("after NOTIFY\n");
                     //print_peer_info_long(self);
-                    printf("AJ:%s\n", peer_info_to_str(self));
+                    char* peer_info2 = peer_info_to_str(self);
+                    printf("AJ:%s\n", peer_info2);
+                    free(peer_info2);
                 #endif
             }
             break;
@@ -368,6 +378,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET so
                     fprintf(stderr, " Sending Notify after Join\n");
                     return -1;
                 }
+                free(out);
                 close_socket(peer_socket);
 
                 // Update Prev

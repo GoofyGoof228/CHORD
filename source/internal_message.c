@@ -150,9 +150,13 @@ int send_internal_message(internal_message *m, int sock){
         //print_internal_message(m);
     //}
     if(LOG_SN){
+        char* int_str = internal_message_to_str(m);
         printf("S: %s\n", internal_message_to_str(m));
+        free(int_str);
     } else if (m->type != NOTIFY && m->type != STABILIZE && m->type != JOIN){
-        printf("S: %s\n", internal_message_to_str(m));
+        char* int_str = internal_message_to_str(m);
+        printf("S: %s\n", int_str);
+        free(int_str);
     }
 
 
