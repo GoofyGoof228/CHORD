@@ -11,7 +11,7 @@
 #include "peer_help.h"
 
 #define TEST
-
+#define SOCKET int
 uint32_t get_ipv4_addr(char *name);
 
 /**
@@ -38,6 +38,9 @@ int handle_external_message(external_message * m_ex, peer_info * self, int socke
 int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* master);
 
 
+//TODO please always use this function to close socket, as it is too hard to keep in mind where which one was/will be closed.
+// this functino checks it, and doesnt fail if socket already closed tries to be closed once more
+void close_socket(SOCKET socket);
 
 
 #endif //BLOCK4_PEER_FUNC_H

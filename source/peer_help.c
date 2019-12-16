@@ -9,10 +9,11 @@
 #include <sys/time.h>
 #define TEST
 //#define DG_POP
-
+#define SOCKET int
 bool join_is_done(peer_info* self){
     return self->initialised_previous && self->initialised_next;
 }
+
 int setup_peer_info(peer_info * self, char *argv[], int argc){
 
     self->first_peer = false;

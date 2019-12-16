@@ -40,7 +40,7 @@ struct _peer_info{
 
     payload** hash_head;
     payload** response_sockets_head;
-    //TODO two list for different types ???
+    //TO DO two list for different types ???
     list* internal_states;
     list* external_states;
     void* ft;

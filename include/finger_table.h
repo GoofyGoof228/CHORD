@@ -7,7 +7,8 @@
 #include <stdint.h>
 #include "peer_help.h"
 //#include "peer_netw.h"
-
+#define FT_KEEP_ALIVE
+#define SOCKET int
 struct _ft_entry{
     uint16_t id;
     uint16_t port;
@@ -24,6 +25,10 @@ struct _finger_table{
     uint16_t* start_ids;
     ft_entry **entries;
     bool filled;
+    #ifdef FT_KEEP_ALIVE
+    SOCKET peer_who_asked_to_dew_it;
+    #endif
+
 
 };
 typedef struct _finger_table finger_table;
@@ -41,7 +46,7 @@ uint16_t find_index(uint16_t id, finger_table* ft);
 
 ft_entry* create_entry(uint16_t id, uint32_t ip, uint16_t port);
 
-void create_ft(peer_info* self);
+void create_ft(peer_info* self, SOCKET asked);
 
 void init_fill_ft(peer_info* self);
 

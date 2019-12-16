@@ -14,14 +14,14 @@
 #define COMMAND_LEN 15
 #define GETSOCKETERRNO() (errno)
 #define SOCKET int
-//#define FT_KEEP_ALIVE
+#define FT_KEEP_ALIVE
 #ifdef TEST
 #include <string.h>
 #endif
-
 #define FT_M
-
 #define LOG_SN 0
+
+
 int main(int argc, char* argv[]){
     // Setup Peer Info
     peer_info self_info;
@@ -82,7 +82,7 @@ int main(int argc, char* argv[]){
             fprintf(stderr, " Sending Join to Entry Node\n");
             exit(EXIT_FAILURE);
         }
-        close(peer_sock);
+        close_socket(peer_sock);
     }
 
     time_t last_stab_time = time(NULL);
@@ -110,7 +110,7 @@ int main(int argc, char* argv[]){
                     fprintf(stderr, "Error Sending Stabalize\n");
                     exit(EXIT_FAILURE);
                 }
-                close(peer_sock);
+                close_socket(peer_sock);
             }
             last_stab_time = time(NULL);
             continue;
@@ -155,7 +155,7 @@ int main(int argc, char* argv[]){
                     // Receive and Decode Message
                     if(recv_message(m_in, i) == -1) {
                         FD_CLR(i, &connections_storage);
-                        close(i);
+                        close_socket(i);
                         continue;
                     }
                     #ifdef TEST
@@ -173,6 +173,7 @@ int main(int argc, char* argv[]){
                     fflush(stdout);
                     fflush(stdin);
                     #endif
+
                     react_on_incoming_message(m_in, &self_info, i, &connections_storage);
                     //message is being freed in reac_on bla bla
                     //free_message(m_in);
@@ -184,11 +185,23 @@ int main(int argc, char* argv[]){
                         fflush(stdin);
                         if(strcmp(command, "ft") == 0){
                             //TO DO force to build ft
+                            #ifndef FT_KEEP_ALIVE
                             internal_message* ft = new_internal_message(FINGER, self_info.self_id, self_info.self_id, self_info.self_ip, self_info.self_port);
                             SOCKET peer_socket = connect_to_peer(self_info.self_ip, self_info.self_port);
                             send_internal_message(ft, peer_socket);
-                            close(peer_socket);
+                            close_socket(peer_socket);
                             free(ft);
+                            #endif
+                            #ifdef FT_KEEP_ALIVE
+                            internal_message* ft = new_internal_message(FINGER, 0, 0, 0, 0);
+                            SOCKET peer_socket = connect_to_peer(self_info.self_ip, self_info.self_port);
+                            send_internal_message(ft, peer_socket);
+                            free(ft);
+                            FD_SET(peer_socket, &connections_storage);
+                            if (peer_socket > max_socket){
+                                max_socket = peer_socket;
+                            }
+                            #endif
                         }
                         if(strcmp(command, "fl") == 0){
                             //print FT in file
