@@ -44,8 +44,7 @@ struct _peer_info{
     list* internal_states;
     list* external_states;
     void* ft;
-
-    fd_set* connection_storage;
+    //fd_set* connection_storage;
 
 };
 typedef struct _peer_info peer_info;

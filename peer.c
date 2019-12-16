@@ -86,7 +86,7 @@ int main(int argc, char* argv[]){
     }
 
     time_t last_stab_time = time(NULL);
-    self_info.connection_storage = &connections_storage;
+    //self_info.connection_storage = &connections_storage;
     while(running) {
         // copy FD set
         fd_set in_fd = connections_storage;
