@@ -62,7 +62,7 @@ void print_peer_info_long(peer_info* self);
 
 char *peer_info_to_str(peer_info *self);
 
-internal_message* pop_saved_state_int(list* states, uint16_t hash_id, internal_action type);
+internal_message* pop_saved_state_int(list* states, uint16_t hash_id);
 
 external_message* pop_saved_state_ext(list* states, uint16_t hash_id);
 

@@ -58,12 +58,12 @@ int setup_peer_info(peer_info * self, char *argv[], int argc){
 }
 
 
-internal_message* pop_saved_state_int(list* states, uint16_t hash_id, internal_action type){
+internal_message* pop_saved_state_int(list* states, uint16_t hash_id){
     //iterate over list and find right saved message
         listIterator* it = listIteratorCreate(states);
         internal_message* candidate = listIteratorGetCurrentElement(it);
         while(candidate != NULL){
-            if(candidate->hash_id == hash_id &&  candidate->type == type){
+            if(candidate->hash_id == hash_id){
                 //right message found
                 listIteratorRemoveCurrent(it, NULL);
                 break;

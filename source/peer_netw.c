@@ -254,7 +254,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, int socke
         case REPLY: {
 
             //TODO kaka
-            internal_message *state = pop_saved_state_int(self->internal_states, m_in->hash_id, LOOKUP);
+            internal_message *state = pop_saved_state_int(self->internal_states, m_in->hash_id);
             if(state != NULL){
                     recieve_reply_ft(m_in, self);
                     free(state);

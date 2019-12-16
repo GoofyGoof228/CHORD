@@ -49,7 +49,7 @@ void send_ack(peer_info* self){
 #ifdef DG_FT
         printf("triyng to find FINEGER message with id %d\n", self->self_id);
 #endif
-        internal_message* response = pop_saved_state_int(self->internal_states, self->self_id, FINGER);
+        internal_message* response = pop_saved_state_int(self->internal_states, self->self_id);
         if(response == NULL){
             fprintf(stderr, "No incoming FINGER message was found\n");
             return;
