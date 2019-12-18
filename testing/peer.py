@@ -62,10 +62,10 @@ class Tests(unittest.TestCase):
 						queue.put((pipe, str(process)+" TERMINATING"))
 						break
 					if output and (output != '' or output == b''):
-						if not 'STABILIZE' in output:
-							if not 'JOIN' in output:
-								if not 'NOTIFY' in output:
-									queue.put((pipe, output))
+						#if not 'STABILIZE' in output:
+							#if not 'JOIN' in output:
+								#if not 'NOTIFY' in output:
+						queue.put((pipe, output))
 		finally:
 			queue.put((None,None))
 
@@ -97,14 +97,15 @@ class Tests(unittest.TestCase):
 
 			if queue_element == process.stderr:
 				err_logger.info(output)
+				#self.assertFalse(True,msg="There was an error!")
 			# the next line may intentionally left
 			if queue_element == None:
 				pass
 			# if process child terminated
 			if process.poll() != None and queue.qsize() == 0:
 				# wait that other threads (readers) terminate
-				stdout_thread.join()
-				stderr_thread.join()
+				#stdout_thread.join()
+				#stderr_thread.join()
 				err_logger.info("LOGGER TERMINATING")
 				out_logger.info("LOGGER TERMINATING")
 				break
@@ -169,7 +170,7 @@ class Tests(unittest.TestCase):
 			print(self.cmd_lst[i])
 			x.start()
 
-			time.sleep(0.5) # some time to make sure the peer is started
+			time.sleep(2) # some time to make sure the peer is started
 
 			#x.join() is missing cause there is more code coming and the peers are not allowed to shut down
 
@@ -242,6 +243,7 @@ class Tests(unittest.TestCase):
 		self.data_folder = 'data'+os.path.sep
 		self.path = os.path.abspath(__file__)[:-len(__file__)]
 		self.use_nullbytes_in_keys = True
+		self.filepool = self.path + "messagepool.txt"
 
 
 
@@ -308,28 +310,55 @@ class Tests(unittest.TestCase):
 			x = threading.Thread(target=self.thread_function, args=(" ".join(self.cmd_clients[i]), str(i), logger_stdout, logger_stderr ))
 			x.start()
 			self.client_args_used.append([self.cmd_clients[i][4],self.cmd_clients[i][6]])
+
+		with open(self.filepool,'w') as pool:
+			for element in self.client_args_used:
+				pool.write(element[0]+","+element[1]+"\n")
 			#time.sleep(0.5) # some time to make sure the peer can process the request
 
 
 		for k,i in enumerate(self.client_args_used):
-			print(self.cmd_clients[k])
+			print(" ".join(self.cmd_clients[k]))
 			print(k,i)
 
-		"""
-		if self.client_ip != self.ip:
-			raise ValueError("We just test on the same network")
+		print("\nENDE")
 
-		startport = 2000
+	def get_client_args_used(self):
+		self.client_args_used = []
+		with open(self.filepool,'r') as pool:
+			for k in pool.readlines():
+				self.client_args_used.append(k.rstrip().split(","))
+		return self.client_args_used
 
-		self.client_portrange = np.linspace(startport, startport+self.client_count-1, self.client_count)
+	def test_start_client_2(self):
+		self.test_start_clients_1()
+		self.cmpfolder = self.path+"logs"+os.path.sep
+		self.cmd_clients = []
 
-		cmd_lst = []
-		"""
+		for i,entry in enumerate(self.get_client_args_used()):
+			self.cmd_clients.append(self.getter_client(int(self.portrange[i]),entry[0],self.cmpfolder+entry[1].split(os.path.sep)[-1]))
+
+		for i in range(0,self.client_count):
+
+			# set name for logger- and filenamesyntax
+			filename_stderror = "CLIENT_ERR_TO_"+str(self.cmd_clients[i][2])+".txt"
+			filename_stdout   = "CLIENT_OUT_TO_"+str(self.cmd_clients[i][2])+".txt"
+
+			# init loggers
+			logger_stdout = Logger(filename_stdout).logger
+			logger_stderr = Logger(filename_stderror).logger
+
+			#logger_stdout.info("Starting job "+str(i)+" with Peer ID"+str(self.cmd_lst[i][2]))
+			#logger_stderr.info("Starting job "+str(i)+" with Peer ID"+str(self.cmd_lst[i][2]))
+
+			x = threading.Thread(target=self.thread_function, args=(" ".join(self.cmd_clients[i]), str(i), logger_stdout, logger_stderr ))
+			x.start()
+			self.client_args_used.append([self.cmd_clients[i][4],self.cmd_clients[i][6]])
+
+
 
 if __name__ == '__main__':
-	if platform.system() == "Linux":
-		unittest.main()
-	else:
-		print("PLEASE RUN THIS CODE ON LINUX")
-		unittest.main()
+	unittest.main()
+	#t = Tests()
+	#t.test_start_client_2()
 
