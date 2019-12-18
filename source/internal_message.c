@@ -9,7 +9,7 @@
 #include <arpa/inet.h>
 #include "internal_message.h"
 #define TEST
-
+#define LOG_SN 0
 int encode_internal_message (uint8_t *buf, internal_message *m) {
 
     // encode action
@@ -149,7 +149,16 @@ int send_internal_message(internal_message *m, int sock){
         //printf("Sent:");
         //print_internal_message(m);
     //}
+    if(LOG_SN){
+        char* int_str = internal_message_to_str(m);
         printf("S: %s\n", internal_message_to_str(m));
+        free(int_str);
+    } else if (m->type != NOTIFY && m->type != STABILIZE && m->type != JOIN){
+        char* int_str = internal_message_to_str(m);
+        printf("S: %s\n", int_str);
+        free(int_str);
+    }
+
 
     #endif
     uint8_t *buf = calloc(INTERNAL_HEADER_LEN, sizeof(uint8_t));
@@ -194,7 +203,7 @@ internal_message * new_internal_message (internal_action type, uint16_t hash_id,
 
 void print_internal_message(internal_message* m){
     if(m == NULL){
-        fprintf(stderr, "void print_internal_message : m == NULL");
+        fprintf(stderr, "print_internal_message : m == NULL\n");
         return;
     }
     printf("internal message\n");
@@ -241,4 +250,14 @@ char * internal_message_to_str(internal_message *m){
     }
 
     return res;
+}
+
+internal_message* copy_int_message(internal_message* old){
+    internal_message* new = malloc(sizeof(internal_message));
+    new->hash_id = old->hash_id;
+    new->node_id = old->node_id;
+    new->node_ip = old->node_ip;
+    new->node_port = old->node_port;
+    new->type = old->type;
+    return new;
 }
