@@ -4,9 +4,7 @@
 
 #include "external_message.h"
 
-#include <stdio.h>
-#include <sys/socket.h>
-#define TEST
+
 int encode_external_message(uint8_t *buf, external_message *msg){
     msg->ack ? (buf[0] = (uint8_t) 0x08) : (buf[0] = (uint8_t) 0x00);
 

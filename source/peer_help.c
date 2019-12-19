@@ -3,17 +3,34 @@
 //
 
 #include "peer_help.h"
-#include "peer_netw.h"
-#include <stdio.h>
-#include <arpa/inet.h>
-#include <sys/time.h>
-#define TEST
-//#define DG_POP
-#define SOCKET int
+
 bool join_is_done(peer_info* self){
     return self->initialised_previous && self->initialised_next;
 }
 
+
+uint32_t get_ipv4_addr(char *name){
+    int status;
+    struct addrinfo hints;
+    struct addrinfo *res, *p;  // will point to the results
+
+    memset(&hints, 0, sizeof hints); // make sure the struct is empty
+    hints.ai_family = AF_INET;     //  IPv4 only
+    hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
+
+    if ((status = getaddrinfo(name, NULL, &hints, &res)) != 0) {
+        fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
+        exit(EXIT_FAILURE);
+    }
+    uint32_t result = 0;
+    for(p = res;p != NULL; p = p->ai_next) {
+        struct sockaddr_in *ipv4 = (struct sockaddr_in *) p->ai_addr;
+        result = ipv4->sin_addr.s_addr;
+        break;
+    }
+    freeaddrinfo(res);
+    return ntohl(result);
+}
 int setup_peer_info(peer_info * self, char *argv[], int argc){
 
     self->first_peer = false;

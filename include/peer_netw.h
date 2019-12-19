@@ -6,13 +6,23 @@
 #define BLOCK4_PEER_FUNC_H
 #include <netdb.h>
 #include <stdio.h>
+#include <sys/socket.h>
+#include  <unistd.h>
+#include <arpa/inet.h>
+#include "hash_table.h"
+#include "peer_help.h"
 #include "message.h"
 #include "list.h"
 #include "peer_help.h"
+#include "finger_table.h"
 #define FT_KEEP_ALIVE
 #define TEST
 #define SOCKET int
-uint32_t get_ipv4_addr(char *name);
+#define LOG_SN 0
+#define FT_M
+#define DG_FT
+#define SOCK_OUT
+#define DG_EXT
 
 /**
  * in - filled struct

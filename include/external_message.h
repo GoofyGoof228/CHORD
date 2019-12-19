@@ -7,6 +7,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <sys/socket.h>
+#define TEST
 #include "payload.h"
 
 

@@ -5,7 +5,9 @@
 #define BLOCK2_HASH_TABLE_H
 #include <stdint.h>
 #include "payload.h"
-
+#include <stdio.h>
+#define TEST
+//#define H_DB
 
 /**
  * returns new dep copy of structure,

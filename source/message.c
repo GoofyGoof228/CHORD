@@ -2,11 +2,9 @@
 // Created by Jonathan Burggraf on 21.11.19.
 //
 
-#include <stdio.h>
-#include <sys/socket.h>
-#include <stdint.h>
+
 #include "message.h"
-#define TEST
+
 bool is_internal(uint8_t byte){
 
     uint8_t control = byte & (uint8_t) 0x80;
@@ -17,24 +15,7 @@ bool is_internal(uint8_t byte){
     }
     return false;
 }
-message* create_wrapper(void* m, const int type){
-    if(type != EXTERNAL_MES && type != INTERNAL_MES){
-        fprintf(stderr, "invalid type for wrapper!\n");
-        return NULL;
-    }
-    message* new_m = malloc(sizeof(message));
-    if(type == EXTERNAL_MES){
-        new_m->ext_msg = (external_message*) m;
-        new_m->int_msg = NULL;
-        new_m->internal = false;
-    }
-    if(type == INTERNAL_MES){
-        new_m->int_msg = (internal_message*) m;
-        new_m->ext_msg = NULL;
-        new_m->internal = true;
-    }
-    return new_m;
-}
+
 int recv_message(message *m, int sock){
 
     int bytes_recieved = 0;

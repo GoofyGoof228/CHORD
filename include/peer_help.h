@@ -6,13 +6,23 @@
 #define BLOCK4_PEER_HELP_H
 
 #include <stdint.h>
+#include <stdio.h>
+#include <arpa/inet.h>
+#include <sys/time.h>
+#include <netdb.h>
+#include <sys/select.h>
+
+
 #include "payload.h"
 #include "list.h"
 #include "internal_message.h"
 #include "external_message.h"
 #include "message.h"
-#include <sys/select.h>
 //#include "finger_table.h"
+
+#define TEST
+//#define DG_POP
+#define SOCKET int
 /**
  * must be filled at start up
  * list should be initialized with list create
@@ -56,6 +66,8 @@ int setup_peer_info(peer_info * self, char *argv[], int argc);
 void print_addr_info(uint16_t id, uint32_t ip, uint32_t port);
 
 void print_peer_info_short(peer_info* self);
+
+uint32_t get_ipv4_addr(char *name);
 
 void print_peer_info_long(peer_info* self);
 

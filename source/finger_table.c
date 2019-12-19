@@ -3,19 +3,7 @@
 //
 
 #include "finger_table.h"
-#include <stdlib.h>
-#include <arpa/inet.h>
-#include <stdint.h>
-#include "peer_netw.h"
-#import <sys/socket.h>
-#include <unistd.h>
-#include "list.h"
-#include <string.h>
-#define NUM_BITS_IN_HASH 16
-#define TEST
-#define SOCKET int
-//#define DG_FT
-#define SOCKET int
+
 void print_entry(ft_entry* fe){
     if(fe == NULL){
         fprintf(stderr,"entry == NULL");
@@ -46,19 +34,6 @@ void send_ack(peer_info* self){
         #ifdef DG_FT
         printf("triyng to find FINEGER message with id %d\n", self->self_id);
         #endif
-        #ifndef FT_KEEP_ALIVE
-        internal_message* response = pop_saved_state_int(self->internal_states, self->self_id);
-        if(response == NULL){
-            fprintf(stderr, "No incoming FINGER message was found\n");
-            return;
-        }
-        SOCKET peer_socket = connect_to_peer(response->node_ip, response->node_port);
-        send_internal_message(out, peer_socket);
-        close_socket(peer_socket);
-        free(out);
-        free(response);
-        #endif
-        #ifdef FT_KEEP_ALIVE
         SOCKET peer_socket = ((finger_table*)(self->ft))->peer_who_asked_to_dew_it;
         if(send_internal_message(out, peer_socket) == -1){
             fprintf(stderr, "send_ack : failed to send internal message\n");
@@ -66,7 +41,6 @@ void send_ack(peer_info* self){
         }
         free(out);
         close_socket(peer_socket);
-        #endif
 }
 bool ft_is_done(finger_table* ft){
     for(int i = 0; i != ft->m; ++i){
@@ -94,9 +68,7 @@ void create_ft(peer_info* self, SOCKET asked){
     for(int i = 0; i!= NUM_BITS_IN_HASH; ++i)ft_new->entries[i] = NULL;
     ft_new->filled = false;
     self->ft = ft_new;
-    #ifdef FT_KEEP_ALIVE
     ft_new->peer_who_asked_to_dew_it = asked;
-    #endif
 }
 void init_fill_ft(peer_info* self){
 #ifdef DG_FT
@@ -111,9 +83,7 @@ void init_fill_ft(peer_info* self){
             ft->entries[i] = create_entry(self->self_id, self->self_ip, self->self_port);
             if(ft_is_done(ft)){
                 send_ack(self);
-                #ifdef FT_KEEP_ALIVE
                 FD_CLR(((finger_table*)(self->ft))->peer_who_asked_to_dew_it, self->connection_storage);
-                #endif
                 return;
             }
             continue;
@@ -122,9 +92,7 @@ void init_fill_ft(peer_info* self){
             ft->entries[i] = create_entry(self->next_id, self->next_ip, self->next_port);
             if(ft_is_done(ft)){
                 send_ack(self);
-#ifdef FT_KEEP_ALIVE
                 FD_CLR(((finger_table*)(self->ft))->peer_who_asked_to_dew_it, self->connection_storage);
-#endif
                 return;
             }
             continue;
@@ -144,9 +112,7 @@ void recieve_reply_ft(internal_message* lp, peer_info* self){
     ft->entries[index] = create_entry(lp->node_id, lp->node_ip, lp->node_port);
     if(ft_is_done(ft)){
         send_ack(self);
-#ifdef FT_KEEP_ALIVE
         FD_CLR(((finger_table*)(self->ft))->peer_who_asked_to_dew_it, self->connection_storage);
-#endif
     }
 }
 void search_for_successor(uint16_t id, peer_info* self){
@@ -226,10 +192,24 @@ ft_entry* find_corresponding_peer(finger_table* ft, uint16_t hash_id){
     for(int i = 1; i != ft->m; i++){
         //if id is between me and next one, send entry of next one
         if(is_between(hash_id, ft->entries[i-1]->id, ft->entries[i]->id)){
-            ft_entry* result = copy_entry(ft->entries[i]);
-            return result;
+            int index = i;
+            if(abs(hash_id - ft->entries[i-1]->id) < abs(hash_id - ft->entries[i]->id)) index = i-1;
+            return copy_entry(ft->entries[index]);
         }
-
+    }
+    return NULL;
+}
+ft_entry* find_nearest_peer(finger_table* ft, uint16_t hash_id){
+    //if no resp peer found, find nearest one
+    uint16_t min_dist = UINT16_MAX;
+#ifdef DG_FT
+    printf("lokking forr peer in ft\n");
+    printf("min dist = %d\n", min_dist);
+#endif
+    for(int i = 0; i != ft->m; i++){
+        int new_dist = abs(ft->entries[i]->id - hash_id);
+        if(new_dist < min_dist) min_dist = new_dist;
+        if(new_dist > min_dist) return copy_entry(ft->entries[i-1]);
     }
     return NULL;
 }

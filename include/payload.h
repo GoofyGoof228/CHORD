@@ -7,8 +7,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <unistd.h>
 #include "uthash.h"
 
+#define TEST
 /**
  * wrappers struct for key, data, and some infos from header
  * */

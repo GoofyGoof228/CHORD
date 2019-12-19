@@ -2,21 +2,10 @@
 // Created by Artem Sereda on 22.11.19.
 //
 
-#include <sys/socket.h>
-#include  <unistd.h>
-#include <stdio.h>
-#include <arpa/inet.h>
+
 #include "peer_netw.h"
-#include "hash_table.h"
-#include "peer_help.h"
-#include "finger_table.h"
-#include <netdb.h>
-#define SOCKET int
-#define TEST
-#define LOG_SN 0
-//#define FT_M
-//#define DG_FT
-#define SOCK_OUT
+
+
 void close_socket(SOCKET socket){
     if(socket != -1){
         close(socket);
@@ -28,28 +17,7 @@ void close_socket(SOCKET socket){
     }
 
 }
-uint32_t get_ipv4_addr(char *name){
-    int status;
-    struct addrinfo hints;
-    struct addrinfo *res, *p;  // will point to the results
 
-    memset(&hints, 0, sizeof hints); // make sure the struct is empty
-    hints.ai_family = AF_INET;     //  IPv4 only
-    hints.ai_socktype = SOCK_STREAM; // TCP stream sockets
-
-    if ((status = getaddrinfo(name, NULL, &hints, &res)) != 0) {
-        fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
-        exit(EXIT_FAILURE);
-    }
-    uint32_t result = 0;
-    for(p = res;p != NULL; p = p->ai_next) {
-        struct sockaddr_in *ipv4 = (struct sockaddr_in *) p->ai_addr;
-        result = ipv4->sin_addr.s_addr;
-        break;
-    }
-    freeaddrinfo(res);
-    return ntohl(result);
-}
 
 int setup_listen_socket(uint16_t port_number, char * ip_str){
     char port[12];
@@ -194,10 +162,10 @@ int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET so
                             free(result);
                             return 0;
                         }else{
-                            //send lookup to last known peer
-                            result = get_last_entry(self->ft);
+                            //send lookup to nearest known peer
+                            result = find_nearest_peer(self->ft, m_in->hash_id);
                             #ifdef DG_FT
-                            printf("forwarding lookup to last entry\n");
+                            printf("forwarding lookup to nearest entry\n");
                             print_entry(result);
                             #endif
                             //TO DO check not to senbd it urself
@@ -410,9 +378,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET so
         #ifdef FT_M
         printf("Finger table was succesfully built by peer with id %d\n", m_in->node_id);
         #endif
-        #ifdef FT_KEEP_ALIVE
             //FD_CLR(socket, master);
-        #endif
             close_socket(socket);
             return 0;
 
@@ -422,19 +388,9 @@ int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET so
          printf("saved FINGER message\n");
          print_internal_message(m_in);
         #endif
-        #ifndef FT_KEEP_ALIVE
-            internal_message* to_save = copy_int_message(m_in);
-            listPushBack(self->internal_states, to_save);
             if(self->ft != NULL) free_ft(self->ft);
             create_ft(self, socket);
             init_fill_ft(self);
-            //??? close_socket(socket);
-        #endif
-        #ifdef FT_KEEP_ALIVE
-            if(self->ft != NULL) free_ft(self->ft);
-            create_ft(self, socket);
-            init_fill_ft(self);
-        #endif
             return 0;
 
         }
@@ -469,8 +425,15 @@ int handle_external_message(external_message * m_ex, peer_info * self, int socke
     // Normal Client Request
     else{
         uint16_t hash_id = get_hash_id(m_ex->data->key, m_ex->data->key_len);
+        bool is_betw = is_between(hash_id, self->previous_id, self->self_id);
+#ifdef DG_EXT
+        printf("recieved ext message with id %d\n", hash_id);
+        printf("responsible for : from %d to %d\n", self->previous_id+1, self->self_id);
+        printf("is between %s\n", (is_betw)? "true" : "false");
+#endif
         // Answer Directly
-        if(is_between(hash_id, self->previous_id, self->self_id)){
+
+        if(is_betw){
             // do action on HT
             external_message* out = do_hashtable_action(m_ex, self->hash_head);
             if (out == NULL){
@@ -505,13 +468,13 @@ int handle_external_message(external_message * m_ex, peer_info * self, int socke
                     print_entry(result);
                     #endif
                     if(result == NULL){
-                        //TO DO send lookup on next
+                        //TO DO send lookup on nearest entry
                         #ifdef TEST
-                        printf("lookup sended to last entry\n");
+                        printf("lookup sended to nearest entry\n");
                         #endif
                         internal_message * out = new_internal_message(LOOKUP, hash_value, self->self_id, self->self_ip, self->self_port);
                         //create_look_up(m_ex, self);
-                        result = get_last_entry(self->ft);
+                        result = find_nearest_peer(self->ft, hash_value);
                         int peer_socket = connect_to_peer(result->ip, result->port);
                         if(send_internal_message(out, peer_socket) == -1){
                             fprintf(stderr, " Sending initial Lookup for Client Request\n");
@@ -573,16 +536,10 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
 
     if(in->int_msg != NULL){
 
-        #ifdef FT_KEEP_ALIVE
         if(in->int_msg->type != FINGER){
             close_socket(socket);
             FD_CLR(socket, master);
         }
-        #endif
-        #ifndef FT_KEEP_ALIVE
-        close_socket(socket);
-        FD_CLR(socket, master);
-        #endif
         internal_message* m_in = in->int_msg;
 
         res = handle_internal_message(m_in, self, socket, master);
