@@ -207,3 +207,12 @@ bool time_out(struct timeval *start){
     return elapsed >= 2;
 #endif
 }
+
+
+bool is_me(peer_info* self, uint16_t hash_id){
+    return is_between(hash_id, self->previous_id, self->self_id);
+}
+
+bool is_next_node(peer_info* self, uint16_t hash_id){
+    return is_between(hash_id, self->self_id, self->next_id);
+}

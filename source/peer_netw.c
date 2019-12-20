@@ -133,17 +133,15 @@ external_message* do_hashtable_action(external_message *in, payload **hash){
 }
 
 int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET socket, fd_set * master) {
-    int peer_socket = -1;
+    SOCKET peer_socket = -1;
 
     switch(m_in->type) {
         case LOOKUP: {
-            // check if next one is resp peer
             //TO DO do it in old manner
-            if (is_between(m_in->hash_id, self->self_id, self->next_id)) {
+            if (is_next_node(self, m_in->hash_id)) {
                 // send repl with info of next node
                 internal_message *reply = new_internal_message(REPLY, m_in->hash_id, self->next_id, self->next_ip, self->next_port);
                 peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
-
                 if(send_internal_message(reply, peer_socket) == -1){
                     fprintf(stderr, " Sending Reply\n");
                     return -1;
@@ -151,14 +149,12 @@ int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET so
                 close_socket(peer_socket);
                 free(reply);
                 return 0;
-            }else if(is_between(m_in->hash_id, self->previous_id, self->self_id)) {
+            }else if(is_me(self, m_in->hash_id)) {
                 //TO DO also check me, for FT case
-
                 // send repl with info of me
-                internal_message *reply = new_internal_message(REPLY, m_in->hash_id, self->previous_id, self->self_ip,
+                internal_message *reply = new_internal_message(REPLY, m_in->hash_id, self->self_id, self->self_ip,
                                                                self->self_port);
                 peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
-
                 if (send_internal_message(reply, peer_socket) == -1) {
                     fprintf(stderr, " Sending Reply\n");
                     return -1;
@@ -166,79 +162,28 @@ int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET so
                 close_socket(peer_socket);
                 free(reply);
                 return 0;
-            }
-                if(self->ft != NULL){
-                    if(((finger_table*)self->ft)->filled){
-                        #ifdef TEST
-                        printf("FT used after lookup for reply\n");
-                        #endif
-                        ft_entry* result = find_corresponding_peer(self->ft, m_in->hash_id);
-                        if(result != NULL){
-                            //peer found - send reply
-                        #ifdef DG_FT
-                        printf("Found entry\n");
-                        print_entry(result);
-                        #endif
-                            internal_message *reply = new_internal_message(LOOKUP, m_in->hash_id, result->id, result->ip, result->port);
-                            peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
-                            if(send_internal_message(reply, peer_socket) == -1){
-                                fprintf(stderr, " Sending Reply\n");
-                                return -1;
-                            }
-                            close_socket(peer_socket);
-                            free(reply);
-                            free(result);
-                            return 0;
-                        }else{
-                            //send lookup to nearest known peer
-                            result = find_nearest_peer(self->ft, m_in->hash_id);
-                            #ifdef DG_FT
-                            printf("forwarding lookup to nearest entry\n");
-                            print_entry(result);
-                            #endif
-                            //TO DO check not to senbd it urself
-                            if(result->id == self->self_id){
-                                internal_message *reply = new_internal_message(LOOKUP, m_in->hash_id, self->self_id, self->self_ip, self->self_port);
-                                peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
-                                if(send_internal_message(reply, peer_socket) == -1){
-                                    fprintf(stderr, " Sending Reply\n");
-                                    return -1;
-                                }
-                                close_socket(peer_socket);
-                                free(reply);
-                                free(result);
-                                return 0;
-                            }
-                            peer_socket = connect_to_peer(result->ip, result->port);
-                            send_internal_message(m_in, peer_socket);
-                            close_socket(peer_socket);
-                            free(result);
-                            return 0;
-                        }
-                    }else{
-                        // send to next peer
-                        peer_socket = connect_to_peer(self->next_ip, self->next_port);
-                        if(send_internal_message(m_in, peer_socket) == -1){
-                            fprintf(stderr, " Sending Lookup onwards\n");
-                            return -1;
-                        }
-                        close_socket(peer_socket);
-                    }
-                    return 0;
+            }else{
+                peer_socket = connect_to_peer(self->next_ip, self->next_port);
+                if (send_internal_message(m_in, peer_socket) == -1) {
+                    fprintf(stderr, " Sending Reply\n");
+                    return -1;
                 }
-
+                close_socket(peer_socket);
+                //free(m_in);
+                return 0;
+            }
 
         }
         case REPLY: {
 
             //TO DO kaka
-            internal_message *state = pop_saved_state_int(self->internal_states, m_in->hash_id);
+            /*internal_message *state = pop_saved_state_int(self->internal_states, m_in->hash_id);
             if(state != NULL){
                     recieve_reply_ft(m_in, self);
                     free(state);
                     close_socket(socket);
                     return 0;
-            }
+            }*/
             /*if(state == NULL){
                 fprintf(stderr, "Error: No Saved Message to match REPLY with Hash ID: %u", m_in->hash_id);
                 return -1;
@@ -423,16 +368,9 @@ int handle_external_message(external_message * m_ex, peer_info * self, int socke
     }
     // Normal Client Request
     else{
-        uint16_t hash_id = get_hash_id(m_ex->data->key, m_ex->data->key_len);
-        bool is_betw = is_between(hash_id, self->previous_id, self->self_id);
-#ifdef DG_EXT
-        printf("recieved ext message with id %d\n", hash_id);
-        printf("responsible for : from %d to %d\n", self->previous_id+1, self->self_id);
-        printf("is between %s\n", (is_betw)? "true" : "false");
-#endif
         // Answer Directly
 
-        if(is_betw){
+        if(is_me(self,get_hash_id(m_ex->data->key, m_ex->data->key_len))){
             // do action on HT
             external_message* out = do_hashtable_action(m_ex, self->hash_head);
             if (out == NULL){
@@ -454,77 +392,20 @@ int handle_external_message(external_message * m_ex, peer_info * self, int socke
             // save the state
             listPushBack(self->external_states, m_ex);
             int hash_value = get_hash_id(m_ex->data->key, m_ex->data->key_len);
-
-
-            if(self->ft != NULL){
-                if(((finger_table*)self->ft)->filled){
-                    #ifdef TEST
-                    printf("FT used for lookup\n");
-                    #endif
-                    ft_entry* result = find_corresponding_peer(self->ft, hash_value);
-
-                    if(result == NULL){
-                        //TO DO send lookup on nearest entry
-                        #ifdef TEST
-                        printf("lookup sended to nearest entry\n");
-                        #endif
-                        internal_message * out = new_internal_message(LOOKUP, hash_value, self->self_id, self->self_ip, self->self_port);
-                        //create_look_up(m_ex, self);
-                        result = find_nearest_peer(self->ft, hash_value);
-                        #ifdef TEST
-                        printf("FT: result\n");
-                        print_entry(result);
-                        #endif
-                        int peer_socket = connect_to_peer(result->ip, result->port);
-                        if(send_internal_message(out, peer_socket) == -1){
-                            fprintf(stderr, " Sending initial Lookup for Client Request\n");
-                            return -1;
-                        }
-                        close_socket(peer_socket);
-                        free(result);
-                        free(out);
-                        return 0;
-                    }else{
-                        #ifdef TEST
-                        printf("FT: result\n");
-                        print_entry(result);
-                        #endif
-                        //TO DO send action (extr)
-                        #ifdef TEST
-                        printf("external message will be forwarded\n");
-                        #endif
-                        internal_message * out = new_internal_message(LOOKUP, hash_value, self->self_id, self->self_ip, self->self_port);
-                        int peer_socket = connect_to_peer(result->ip, result->port);
-                        send_internal_message(out, peer_socket);
-                        FD_SET(peer_socket, master);
-
-                        // Save the client socket
-                        payload *p = ints_to_payload(peer_socket, m_ex->socket_recieved_from);
-                        h_set_p(self->response_sockets_head, p);
-                        //free_message();
-                        free_payload(p);
-                        free(out);
-                    }
-                }
-
+            //TO DO do it in old manner
+            internal_message * out = new_internal_message(LOOKUP, hash_value, self->self_id, self->self_ip, self->self_port); //create_look_up(m_ex, self);
+            int peer_socket = connect_to_peer(self->next_ip, self->next_port);
+            if(send_internal_message(out, peer_socket) == -1){
+                fprintf(stderr, " Sending initial Lookup for Client Request\n");
+                return -1;
             }
-            else{
-                //TO DO do it in old manner
-                internal_message * out = new_internal_message(LOOKUP, hash_value, self->self_id, self->self_ip, self->self_port); //create_look_up(m_ex, self);
-                int peer_socket = connect_to_peer(self->next_ip, self->next_port);
-                if(send_internal_message(out, peer_socket) == -1){
-                    fprintf(stderr, " Sending initial Lookup for Client Request\n");
-                    return -1;
-                }
-                close_socket(peer_socket);
-
-                free(out);
-                return 0;
+            close_socket(peer_socket);
+            free(out);
+            return 0;
             }
 
 
 
-        }
     }
     return 0;
 }

@@ -80,4 +80,8 @@ external_message* pop_saved_state_ext(list* states, uint16_t hash_id);
 bool is_between(uint16_t hash, uint16_t prev, uint16_t now);
 
 bool time_out(struct timeval *start);
+
+bool is_me(peer_info* self, uint16_t hash_id);
+
+bool is_next_node(peer_info* self, uint16_t hash_id);
 #endif //BLOCK4_PEER_HELP_H

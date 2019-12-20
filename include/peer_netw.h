@@ -53,4 +53,5 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
 void close_socket(SOCKET socket);
 
 
+
 #endif //BLOCK4_PEER_FUNC_H
