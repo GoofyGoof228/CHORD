@@ -43,6 +43,7 @@ void send_ack(peer_info* self){
         close_socket(peer_socket);
 }
 bool ft_is_done(finger_table* ft){
+    if(ft == NULL) return false;
     for(int i = 0; i != ft->m; ++i){
         if(ft->entries[i] == NULL){
             ft->filled = false;

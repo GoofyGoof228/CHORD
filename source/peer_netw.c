@@ -137,53 +137,57 @@ int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET so
 
     switch(m_in->type) {
         case LOOKUP: {
-            //TO DO do it in old manner
-            if (is_next_node(self, m_in->hash_id)) {
-                // send repl with info of next node
-                internal_message *reply = new_internal_message(REPLY, m_in->hash_id, self->next_id, self->next_ip, self->next_port);
-                peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
-                if(send_internal_message(reply, peer_socket) == -1){
-                    fprintf(stderr, " Sending Reply\n");
-                    return -1;
-                }
-                close_socket(peer_socket);
-                free(reply);
-                return 0;
-            }else if(is_me(self, m_in->hash_id)) {
-                //TO DO also check me, for FT case
-                // send repl with info of me
-                internal_message *reply = new_internal_message(REPLY, m_in->hash_id, self->self_id, self->self_ip,
-                                                               self->self_port);
-                peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
-                if (send_internal_message(reply, peer_socket) == -1) {
-                    fprintf(stderr, " Sending Reply\n");
-                    return -1;
-                }
-                close_socket(peer_socket);
-                free(reply);
-                return 0;
-            }else{
-                peer_socket = connect_to_peer(self->next_ip, self->next_port);
-                if (send_internal_message(m_in, peer_socket) == -1) {
-                    fprintf(stderr, " Sending Reply\n");
-                    return -1;
-                }
-                close_socket(peer_socket);
-                //free(m_in);
-                return 0;
-            }
+            if(ft_is_done(self->ft)){
+                //TODO send to nearest peer
 
+            }else{
+                //TO DO do it in old manner
+                if (is_next_node(self, m_in->hash_id)) {
+                    // send repl with info of next node
+                    internal_message *reply = new_internal_message(REPLY, m_in->hash_id, self->next_id, self->next_ip, self->next_port);
+                    peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
+                    if(send_internal_message(reply, peer_socket) == -1){
+                        fprintf(stderr, " Sending Reply\n");
+                        return -1;
+                    }
+                    close_socket(peer_socket);
+                    free(reply);
+                    return 0;
+                }else if(is_me(self, m_in->hash_id)) {
+                    //TO DO also check me, for FT case
+                    // send repl with info of me
+                    internal_message *reply = new_internal_message(REPLY, m_in->hash_id, self->self_id, self->self_ip,
+                                                                   self->self_port);
+                    peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
+                    if (send_internal_message(reply, peer_socket) == -1) {
+                        fprintf(stderr, " Sending Reply\n");
+                        return -1;
+                    }
+                    close_socket(peer_socket);
+                    free(reply);
+                    return 0;
+                }else{
+                    peer_socket = connect_to_peer(self->next_ip, self->next_port);
+                    if (send_internal_message(m_in, peer_socket) == -1) {
+                        fprintf(stderr, " Sending Reply\n");
+                        return -1;
+                    }
+                    close_socket(peer_socket);
+                    //free(m_in);
+                    return 0;
+                }
+            }
         }
         case REPLY: {
 
             //TO DO kaka
-            /*internal_message *state = pop_saved_state_int(self->internal_states, m_in->hash_id);
+            internal_message *state = pop_saved_state_int(self->internal_states, m_in->hash_id);
             if(state != NULL){
                     recieve_reply_ft(m_in, self);
                     free(state);
                     close_socket(socket);
                     return 0;
-            }*/
+            }
             /*if(state == NULL){
                 fprintf(stderr, "Error: No Saved Message to match REPLY with Hash ID: %u", m_in->hash_id);
                 return -1;
@@ -392,17 +396,25 @@ int handle_external_message(external_message * m_ex, peer_info * self, int socke
             // save the state
             listPushBack(self->external_states, m_ex);
             int hash_value = get_hash_id(m_ex->data->key, m_ex->data->key_len);
-            //TO DO do it in old manner
-            internal_message * out = new_internal_message(LOOKUP, hash_value, self->self_id, self->self_ip, self->self_port); //create_look_up(m_ex, self);
-            int peer_socket = connect_to_peer(self->next_ip, self->next_port);
-            if(send_internal_message(out, peer_socket) == -1){
-                fprintf(stderr, " Sending initial Lookup for Client Request\n");
-                return -1;
+            if(ft_is_done(self->ft)){
+                //TODO send lookup faster
+
+
+            }else{
+                //TO DO do it in old manner
+                internal_message * out = new_internal_message(LOOKUP, hash_value, self->self_id, self->self_ip, self->self_port); //create_look_up(m_ex, self);
+                int peer_socket = connect_to_peer(self->next_ip, self->next_port);
+                if(send_internal_message(out, peer_socket) == -1){
+                    fprintf(stderr, " Sending initial Lookup for Client Request\n");
+                    return -1;
+                }
+                close_socket(peer_socket);
+                free(out);
+                return 0;
+
             }
-            close_socket(peer_socket);
-            free(out);
-            return 0;
-            }
+
+        }
 
 
 
