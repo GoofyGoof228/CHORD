@@ -20,7 +20,7 @@ os.system(to_do)
 
 if stat_get:
     print('\n\n\n')
-    to_do = command + ' ' + ip + ' ' + str(int(start_port) + 2) + ' GET ' + ' data'
+    to_do = command + ' ' + ip + ' ' + str(int(start_port)) + ' GET ' + ' data'
     print(to_do)
     os.system(to_do)
 else:
