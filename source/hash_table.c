@@ -1,11 +1,10 @@
 //
 // Created by Artem Sereda on 05.11.19.
 //
-#include <stdio.h>
+
 #include "hash_table.h"
 
-#define TEST
-//#define H_DB
+
 payload* h_get(payload **head, uint8_t* key, uint16_t key_len){
 
     if(head == NULL){

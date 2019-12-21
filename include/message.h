@@ -6,10 +6,13 @@
 #define BLOCK4_MESSAGE_H
 
 #include <stdbool.h>
+#include <stdio.h>
+#include <sys/socket.h>
+#include <stdint.h>
 #include "internal_message.h"
 #include "external_message.h"
-#define INTERNAL_MES -17
-#define EXTERNAL_MES  -21
+
+#define TEST
 /**
  * "meta" message
  * */

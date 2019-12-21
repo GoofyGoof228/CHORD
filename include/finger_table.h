@@ -5,10 +5,24 @@
 #ifndef BLOCK5_FINGER_TABLE_H
 #define BLOCK5_FINGER_TABLE_H
 #include <stdint.h>
+#include <limits.h>
+#include <stdlib.h>
+#include <arpa/inet.h>
+#include <stdint.h>
+#include <string.h>
+#import <sys/socket.h>
+#include <unistd.h>
+
+#include "list.h"
 #include "peer_help.h"
-//#include "peer_netw.h"
-#define FT_KEEP_ALIVE
+#include "peer_netw.h"
+#define NUM_BITS_IN_HASH 16
+#define TEST
 #define SOCKET int
+//#define DG_FT
+#define SOCKET int
+//#define FT_KEEP_ALIVE
+
 struct _ft_entry{
     uint16_t id;
     uint16_t port;
@@ -25,9 +39,7 @@ struct _finger_table{
     uint16_t* start_ids;
     ft_entry **entries;
     bool filled;
-    #ifdef FT_KEEP_ALIVE
     SOCKET peer_who_asked_to_dew_it;
-    #endif
 
 
 };
@@ -63,6 +75,11 @@ void print_ft(finger_table* ft);
 void print_ft_in_file(finger_table* ft);
 
 ft_entry* copy_entry(ft_entry* old);
+
 ft_entry* find_corresponding_peer(finger_table* ft, uint16_t hash_id);
+
+ft_entry* find_nearest_peer(finger_table* ft, uint16_t hash_id);
+
 ft_entry* get_last_entry(finger_table* ft);
+
 #endif //BLOCK5_FINGER_TABLE_H

@@ -6,13 +6,22 @@
 #define BLOCK4_PEER_FUNC_H
 #include <netdb.h>
 #include <stdio.h>
+#include <sys/socket.h>
+#include  <unistd.h>
+#include <arpa/inet.h>
+#include "hash_table.h"
+#include "peer_help.h"
 #include "message.h"
 #include "list.h"
 #include "peer_help.h"
-#define FT_KEEP_ALIVE
+#include "finger_table.h"
+//#define FT_KEEP_ALIVE
 #define TEST
 #define SOCKET int
-uint32_t get_ipv4_addr(char *name);
+#define LOG_SN 0
+//#define FT_M
+//#define DG_FT
+//#define SOCK_OUT
 
 /**
  * in - filled struct
@@ -41,6 +50,7 @@ int react_on_incoming_message(message* in, peer_info* self, int socket, fd_set* 
 //TODO please always use this function to close socket, as it is too hard to keep in mind where which one was/will be closed.
 // this functino checks it, and doesnt fail if socket already closed tries to be closed once more
 void close_socket(SOCKET socket);
+
 
 
 #endif //BLOCK4_PEER_FUNC_H

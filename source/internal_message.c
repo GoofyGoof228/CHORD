@@ -3,13 +3,9 @@
 //
 
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
+
 #include "internal_message.h"
-#define TEST
-#define LOG_SN 0
+
 int encode_internal_message (uint8_t *buf, internal_message *m) {
 
     // encode action
