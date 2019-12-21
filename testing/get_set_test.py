@@ -34,4 +34,5 @@ else:
 print('\n\n')
 
 to_do = command + ' ' + ip + ' ' + str(int(start_port)) + ' DELETE ' + ' data'
+print(to_do)
 os.system(to_do)

@@ -14,11 +14,11 @@
 #define COMMAND_LEN 15
 #define GETSOCKETERRNO() (errno)
 #define SOCKET int
-#define FT_KEEP_ALIVE
+//#define FT_KEEP_ALIVE
 #ifdef TEST
 #include <string.h>
 #endif
-#define FT_M
+//#define FT_M
 #define LOG_SN 0
 
 

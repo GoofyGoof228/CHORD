@@ -15,14 +15,13 @@
 #include "list.h"
 #include "peer_help.h"
 #include "finger_table.h"
-#define FT_KEEP_ALIVE
+//#define FT_KEEP_ALIVE
 #define TEST
 #define SOCKET int
 #define LOG_SN 0
-#define FT_M
-#define DG_FT
-#define SOCK_OUT
-#define DG_EXT
+//#define FT_M
+//#define DG_FT
+//#define SOCK_OUT
 
 /**
  * in - filled struct
