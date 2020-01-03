@@ -7,13 +7,14 @@ def choose_num(min, max):
     return random.randint(min, max)
 
 stat_get = False
-peercount = 9
+peercount = 10
 ip = '127.0.0.1'
-command = '../client_osx'
+command = './client_osx'
 start_port = 4000
 port = choose_num(start_port, start_port + peercount - 1)
-time_interval = 0.0
+time_interval = 0.5
 
+os.system('pwd')
 to_do = command + ' ' + ip + ' ' + str(int(port)) + ' SET ' + ' data < data/data.txt'
 print('\n' + to_do)
 os.system(to_do)
