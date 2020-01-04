@@ -16,7 +16,7 @@
 #include "peer_help.h"
 #include "finger_table.h"
 //#define FT_KEEP_ALIVE
-#define TEST
+//#define TEST
 #define SOCKET int
 #define LOG_SN 0
 //#define FT_M

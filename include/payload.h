@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include "uthash.h"
 
-#define TEST
+//#define TEST
 /**
  * wrappers struct for key, data, and some infos from header
  * */

@@ -10,12 +10,12 @@
 #include <ctype.h>
 #include "finger_table.h"
 #include <sys/select.h>
-#define TEST
+//#define TEST
+//#define COMMAND_LINE
 #define COMMAND_LEN 15
 #define GETSOCKETERRNO() (errno)
 #define SOCKET int
-//#define FT_KEEP_ALIVE
-#ifdef TEST
+#ifdef COMMAND_LINE
 #include <string.h>
 #endif
 //#define FT_M
@@ -98,6 +98,10 @@ int main(int argc, char* argv[]){
             perror("\n");
             exit(EXIT_FAILURE);
         }
+        //update the timeout timer, so select will not return immediatelly
+        time_out.tv_sec = 2;
+        time_out.tv_usec = 0;
+
         // Timeout or select has returned 5 times without sending a Stabalize:
         if (time(NULL) - last_stab_time >= 2) {
             if (self_info.initialised_next){
@@ -184,7 +188,7 @@ int main(int argc, char* argv[]){
                     //free_message(m_in);
                 }else{
                     // Shutdown
-                    #ifdef TEST
+                    #ifdef COMMAND_LINE
                         char *command = calloc(COMMAND_LEN, sizeof(char));
                         fscanf(stdin, "%s", command);
                         fflush(stdin);

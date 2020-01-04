@@ -17,11 +17,9 @@
 #include "peer_help.h"
 #include "peer_netw.h"
 #define NUM_BITS_IN_HASH 16
-#define TEST
+//#define TEST
 #define SOCKET int
 //#define DG_FT
-#define SOCKET int
-//#define FT_KEEP_ALIVE
 
 struct _ft_entry{
     uint16_t id;

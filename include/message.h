@@ -12,7 +12,7 @@
 #include "internal_message.h"
 #include "external_message.h"
 
-#define TEST
+//#define TEST
 /**
  * "meta" message
  * */

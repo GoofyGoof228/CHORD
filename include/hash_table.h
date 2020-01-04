@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "payload.h"
 #include <stdio.h>
-#define TEST
+//#define TEST
 //#define H_DB
 
 /**

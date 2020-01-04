@@ -20,7 +20,7 @@
 #include "message.h"
 //#include "finger_table.h"
 
-#define TEST
+//#define TEST
 //#define DG_POP
 #define SOCKET int
 /**
@@ -53,7 +53,7 @@ struct _peer_info{
     //TO DO two list for different types ???
     list* internal_states;
     list* external_states;
-    void* ft;
+    void* ft; //auto ??
     fd_set* connection_storage;
 
 };

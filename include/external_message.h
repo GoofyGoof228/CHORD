@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/socket.h>
-#define TEST
+//#define TEST
 #include "payload.h"
 
 

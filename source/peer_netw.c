@@ -139,7 +139,8 @@ int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET so
         case LOOKUP: {
             if (is_next_node(self, m_in->hash_id)) {
                 // send repl with info of next node
-                internal_message *reply = new_internal_message(REPLY, m_in->hash_id, self->next_id, self->next_ip, self->next_port);
+                internal_message *reply = new_internal_message(
+                        REPLY, m_in->hash_id, self->next_id, self->next_ip, self->next_port);
                 peer_socket = connect_to_peer(m_in->node_ip, m_in->node_port);
                 if(send_internal_message(reply, peer_socket) == -1){
                     fprintf(stderr, " Sending Reply\n");
@@ -190,6 +191,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET so
                 }
                 close_socket(peer_socket);
                 free(peer);
+                return 0;
                 }else{
                     //send lookup to next (old manner)
                     peer_socket = connect_to_peer(self->next_ip, self->next_port);
@@ -203,7 +205,6 @@ int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET so
                 }
             }
         case REPLY: {
-
             //TO DO check for lookup for ft
             internal_message *state = pop_saved_state_int(self->internal_states, m_in->hash_id);
             if(state != NULL){

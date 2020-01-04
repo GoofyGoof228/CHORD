@@ -13,7 +13,7 @@
 #include <arpa/inet.h>
 
 #define INTERNAL_HEADER_LEN 11
-#define TEST
+//#define TEST
 #define LOG_SN 0
 
 enum _internal_action  {FINGER, F_ACK, JOIN, NOTIFY, STABILIZE, REPLY, LOOKUP};
