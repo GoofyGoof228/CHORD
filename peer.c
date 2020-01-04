@@ -2,24 +2,28 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include "hash_table.h"
-#include "peer_netw.h"
-#include "peer_help.h"
 #include <arpa/inet.h>
 #include <errno.h>
 #include <ctype.h>
-#include "finger_table.h"
 #include <sys/select.h>
-//#define TEST
-//#define COMMAND_LINE
+
+#include "hash_table.h"
+#include "peer_netw.h"
+#include "peer_help.h"
+#include "finger_table.h"
+
+
+//#define TEST      //debug messages
+//#define COMMAND_LINE      //stdin controls
 #define COMMAND_LEN 15
+//#define NEW_CONNECTION
 #define GETSOCKETERRNO() (errno)
 #define SOCKET int
 #ifdef COMMAND_LINE
 #include <string.h>
 #endif
-//#define FT_M
-#define LOG_SN 0
+//#define FT_M         //messages about finger table being used
+#define LOG_SN 0       // 0 - no stabilize and notify messages printed
 
 
 int main(int argc, char* argv[]){
@@ -36,6 +40,7 @@ int main(int argc, char* argv[]){
             exit(EXIT_FAILURE);
     }
     #ifdef TEST
+        //print info of peer when just started
         //print_peer_info_long(&self_info);
         char* peer_info = peer_info_to_str(&self_info);
         printf("I: %s\n", peer_info);
@@ -49,22 +54,27 @@ int main(int argc, char* argv[]){
         exit(EXIT_FAILURE);
     }
 
+    //timeout timer
     struct timeval time_out;
     time_out.tv_sec = 2;
     time_out.tv_usec = 0;
-
     bool running = true;
 
+    //storage of opened file descriptors
     fd_set connections_storage;
     FD_ZERO(&connections_storage);
-
+    //add socket on which is being listened
     FD_SET(listen_sock, &connections_storage);
     SOCKET max_socket = listen_sock;
 
+    #ifdef COMMAND_LINE
+    //add stdin to storage, to read commandsd from it
     FD_SET(STDIN_FILENO, &connections_storage);
     if(STDIN_FILENO > max_socket){
         max_socket = STDIN_FILENO;
     }
+    #endif
+
     //Start Join Process
     if (!self_info.first_peer) {
         // Send Join
@@ -142,7 +152,7 @@ int main(int argc, char* argv[]){
                     if (client_sock > max_socket) {
                         max_socket = client_sock;
                     }
-                    #ifdef TEST1
+                    #ifdef NEW_CONNECTION
                         socklen_t len;
                         struct sockaddr_storage addr;
                         char ipstr[INET_ADDRSTRLEN];
@@ -167,33 +177,29 @@ int main(int argc, char* argv[]){
                     }
                     #ifdef TEST
                     if(m_in->int_msg != NULL){
-                        //if(m_in->int_msg->type != STABILIZE){
                         if(LOG_SN){
                             printf("R: %s\n", internal_message_to_str(m_in->int_msg));
                         } else if (m_in->int_msg->type != NOTIFY && m_in->int_msg->type != STABILIZE && m_in->int_msg->type != JOIN){
                             char* int_mes = internal_message_to_str(m_in->int_msg);
                             printf("R: %s\n", int_mes);
                             free(int_mes);
-                        }
-
                             //print_message(m_in);
                         //}
                     }
-                    fflush(stdout);
-                    fflush(stdin);
                     #endif
-
                     react_on_incoming_message(m_in, &self_info, i, &connections_storage);
                     //message is being freed in reac_on bla bla
-                    //free_message(m_in);
-                }else{
-                    // Shutdown
+                }
                     #ifdef COMMAND_LINE
+                else{
+                    // stdin commands
+
                         char *command = calloc(COMMAND_LEN, sizeof(char));
                         fscanf(stdin, "%s", command);
                         fflush(stdin);
                         if(strcmp(command, "ft") == 0){
                             //TO DO force to build ft
+                            //finger message will be send 2 urself
                             internal_message* ft = new_internal_message(FINGER, 0, 0, 0, 0);
                             SOCKET peer_socket = connect_to_peer(self_info.self_ip, self_info.self_port);
                             send_internal_message(ft, peer_socket);
@@ -209,19 +215,18 @@ int main(int argc, char* argv[]){
                         }
                         if(strcmp(command, "s") == 0){
                             running = false;
-                            //break;
                         }
                         if(strcmp(command, "i") == 0){
                             print_peer_info_long(&self_info);
                         }
                         //i = max_socket + 1;
                         free(command);
-                        continue;
-                    #endif
                 }
+                    #endif
             }
         }
     }
+        //free used memory
     if(self_info.ft != NULL){
         if( ((finger_table*)self_info.ft)->filled)free_ft(self_info.ft);
     }

@@ -27,14 +27,12 @@ uint16_t find_index(uint16_t id, finger_table* ft){
     return -1;
 }
 void send_ack(peer_info* self){
-        //case for commando-line
-        //TO DO send ack
         internal_message *out = new_internal_message(F_ACK, self->self_id, self->self_id, self->self_ip, self->self_port);
-
         #ifdef DG_FT
         printf("triyng to find FINEGER message with id %d\n", self->self_id);
         #endif
         SOCKET peer_socket = ((finger_table*)(self->ft))->peer_who_asked_to_dew_it;
+
         if(send_internal_message(out, peer_socket) == -1){
             fprintf(stderr, "send_ack : failed to send internal message\n");
             return;
@@ -42,6 +40,8 @@ void send_ack(peer_info* self){
         free(out);
         close_socket(peer_socket);
 }
+
+
 bool ft_is_done(finger_table* ft){
     if(ft == NULL) return false;
     for(int i = 0; i != ft->m; ++i){
@@ -60,6 +60,8 @@ ft_entry* create_entry(uint16_t id, uint32_t ip, uint16_t port){
     new->port = port;
     return new;
 }
+
+
 void create_ft(peer_info* self, SOCKET asked){
     finger_table* ft_new = malloc(sizeof(finger_table));
     ft_new->m = NUM_BITS_IN_HASH;
@@ -71,6 +73,8 @@ void create_ft(peer_info* self, SOCKET asked){
     self->ft = ft_new;
     ft_new->peer_who_asked_to_dew_it = asked;
 }
+
+
 void init_fill_ft(peer_info* self){
 #ifdef DG_FT
     printf("init fill ft\n");

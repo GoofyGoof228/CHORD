@@ -69,7 +69,7 @@ int setup_listen_socket(uint16_t port_number, char * ip_str){
     return listen_sock;
 }
 
-// TO DO: Cleanup
+
 int connect_to_peer(uint32_t ip, uint16_t port){
     // Setup Structs
     struct in_addr sin_addr;
@@ -164,7 +164,7 @@ int handle_internal_message(internal_message * m_in, peer_info * self, SOCKET so
                 return 0;
             }
             if(ft_is_done(self->ft)){
-                //TODO send to nearest peer
+                //TO DO send to nearest peer
                 //fprintf(stderr, "FT lookup not implemented !\n");
                 //goto else_ft_not_impl;
                 #ifdef FT_M
@@ -419,7 +419,7 @@ int handle_external_message(external_message * m_ex, peer_info * self, int socke
             listPushBack(self->external_states, m_ex);
             int hash_value = get_hash_id(m_ex->data->key, m_ex->data->key_len);
             if(ft_is_done(self->ft)){
-                //TODO send lookup faster
+                //TO DO send lookup faster
             #ifdef FT_M
             printf("FT used to send lookup for ext message\n");
             #endif
